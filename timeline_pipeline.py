@@ -226,30 +226,30 @@ def main():
 
     # 4. Load Open Events into Memory
     open_events = []
-    if not args.dry_run:
-        try:
-            cursor.execute("SELECT id, title, entity_keys, centroid, last_seen, article_count FROM events WHERE state = 'open'")
-            event_rows = cursor.fetchall()
-            for r in event_rows:
-                try:
-                    open_events.append({
-                        'id': int(r[0]),
-                        'title': r[1],
-                        'entity_keys': set(json.loads(r[2])),
-                        'centroid': np.frombuffer(r[3], dtype=np.float32),
-                        'last_seen': int(r[4]) if r[4] is not None else 0,
-                        'article_count': int(r[5])
-                    })
-                except Exception as ex:
-                    logging.error(f"Error parsing event row {r[0]}: {ex}")
-            logging.info(f"Loaded {len(open_events)} open events into memory index.")
-        except Exception as e:
-            logging.critical(f"Failed to load open events: {e}")
-            conn.close()
-            sys.exit(1)
+    try:
+        cursor.execute("SELECT id, title, entity_keys, centroid, last_seen, article_count FROM events WHERE state = 'open'")
+        event_rows = cursor.fetchall()
+        for r in event_rows:
+            try:
+                open_events.append({
+                    'id': int(r[0]),
+                    'title': r[1],
+                    'entity_keys': set(json.loads(r[2])),
+                    'centroid': np.frombuffer(r[3], dtype=np.float32),
+                    'last_seen': int(r[4]) if r[4] is not None else 0,
+                    'article_count': int(r[5])
+                })
+            except Exception as ex:
+                logging.error(f"Error parsing event row {r[0]}: {ex}")
+        logging.info(f"Loaded {len(open_events)} open events into memory index.")
+    except Exception as e:
+        logging.critical(f"Failed to load open events: {e}")
+        conn.close()
+        sys.exit(1)
 
     attached_count = 0
-    max_scraped_at = start_id
+    last_processed_id = start_id
+    max_scraped_at = 0
 
     # 5. Pipeline Matching Loop
     for row in articles_rows:
@@ -259,6 +259,7 @@ def main():
         decompressed_article = decompress_text(row[3])
         scraped_at = int(row[4]) if row[4] is not None else 0
         max_scraped_at = max(max_scraped_at, scraped_at)
+        last_processed_id = art_id
 
         # Parse entities
         art_entities = extract_keys(row[5], row[6], row[7], row[8])
@@ -296,7 +297,7 @@ def main():
             if best_sim >= args.sim_threshold and best_match is not None:
                 # Similarity matches threshold. Let's do the 9B attach gate check
                 if args.dry_run:
-                    logging.info(f"  [DRY-RUN] Would evaluate Gemma 9B attach gate for Event ID {best_match['id']} (sim: {best_sim:.4f})")
+                    logging.info(f"  [DRY-RUN] Simulating Gemma 9B attach gate approval for Event ID {best_match['id']} (sim: {best_sim:.4f})")
                     matched_event = best_match
                 else:
                     # Fetch last 3 milestones
@@ -335,8 +336,22 @@ def main():
             # Step 3: Attach or Create Event
             if matched_event is not None:
                 # ATTACH
-                milestone = None
-                if not args.dry_run:
+                if args.dry_run:
+                    # Simulate centroid EMA update in memory
+                    new_centroid = 0.7 * matched_event['centroid'] + 0.3 * embedding
+                    new_centroid_norm = np.linalg.norm(new_centroid)
+                    if new_centroid_norm > 0:
+                        new_centroid /= new_centroid_norm
+                    
+                    matched_event['centroid'] = new_centroid
+                    matched_event['last_seen'] = scraped_at
+                    matched_event['article_count'] += 1
+                    matched_event['entity_keys'] = matched_event['entity_keys'].union(art_entities)
+                    
+                    attached_count += 1
+                    logging.info(f"  [DRY-RUN] Simulated attach to Event ID {matched_event['id']}. New count: {matched_event['article_count']}")
+                else:
+                    milestone = None
                     # Write Milestone using Gemma 2B
                     prompt = milestone_prompt_template.format(
                         title=orig_title,
@@ -436,7 +451,17 @@ def main():
             else:
                 # CREATE NEW EVENT
                 if args.dry_run:
-                    logging.info(f"  [DRY-RUN] Would create new invisible Event for article ID {art_id}.")
+                    new_ev_id = 100000 + len(open_events)
+                    open_events.append({
+                        'id': new_ev_id,
+                        'title': f"Simulated Event {new_ev_id}",
+                        'entity_keys': set(art_entities),
+                        'centroid': embedding,
+                        'last_seen': scraped_at,
+                        'article_count': 1
+                    })
+                    attached_count += 1
+                    logging.info(f"  [DRY-RUN] Simulated create new Event ID {new_ev_id}.")
                 else:
                     try:
                         # Write to database (transactional execution per article)
@@ -456,7 +481,6 @@ def main():
                         new_ev_id = cursor.lastrowid
 
                         # Insert event article mapping
-                        # For the first article, the milestone is simply NULL since it's invisible/untitled
                         cursor.execute("""
                             INSERT INTO event_articles (event_id, article_id, milestone, event_date)
                             VALUES (?, ?, ?, ?)
@@ -531,7 +555,7 @@ def main():
                    OR cities_mentioned NOT IN ('[]',''))
               AND (ministers_mentioned != '[]' OR party_mentioned != '[]' OR civic_flag = 1)
             LIMIT 1
-        """, (max_scraped_at,))
+        """, (last_processed_id,))
         row = cursor.fetchone()
         if row:
             has_more = "true"
@@ -543,10 +567,18 @@ def main():
 
     logging.info(f"Batch completed. attached={attached_count}, has_more={has_more}")
     
-    # Write output to GitHub Actions runner
-    if not args.dry_run:
-        print(f"::set-output name=has_more::{has_more}")
-        print(f"::set-output name=articles_attached::{attached_count}")
+    # Dry Run summary printing
+    if args.dry_run:
+        logging.info("\n=== DRY-RUN GROUPING SUMMARY ===")
+        sorted_events = sorted(open_events, key=lambda e: e['article_count'], reverse=True)
+        logging.info(f"Total Simulated Events: {len(open_events)}")
+        logging.info("Top 20 Events by Simulated Article Count:")
+        for ev in sorted_events[:20]:
+            logging.info(f"  Event ID {ev['id']}: Count: {ev['article_count']} | Last Seen: {ev['last_seen']} | Entities: {list(ev['entity_keys'])}")
+
+    # Print output to stdout for GHA step capture
+    print(f"has_more={has_more}")
+    print(f"articles_attached={attached_count}")
 
 if __name__ == '__main__':
     main()

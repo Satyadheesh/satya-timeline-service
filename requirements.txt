@@ -1,4 +1,4 @@
-libsql-client
+libsql
 sentence-transformers
 numpy
 llama-cpp-python>=0.2.90

@@ -134,8 +134,17 @@ jobs:
             ARGS="$ARGS --limit ${{ github.event.inputs.limit }}"
           fi
           
-          # Execute pipeline
-          python timeline_pipeline.py $ARGS
+          # Execute pipeline and capture outputs
+          python timeline_pipeline.py $ARGS | tee pipeline.log
+          
+          # Extract variables and write to $GITHUB_OUTPUT
+          HAS_MORE=$(grep "has_more=" pipeline.log | cut -d= -f2 || echo "false")
+          ART_ATTACHED=$(grep "articles_attached=" pipeline.log | cut -d= -f2 || echo "0")
+          
+          echo "has_more=$HAS_MORE" >> $GITHUB_OUTPUT
+          echo "articles_attached=$ART_ATTACHED" >> $GITHUB_OUTPUT
+          
+          echo "GHA OUTPUT - has_more: $HAS_MORE, articles_attached: $ART_ATTACHED"
 
       - name: Trigger next Timeline run if remaining
         if: steps.run-pipeline.outputs.has_more == 'true' && github.event.inputs.dry_run != 'true'
