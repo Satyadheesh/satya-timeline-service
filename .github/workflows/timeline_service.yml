@@ -1,0 +1,160 @@
+name: Satya Timeline Service
+
+on:
+  repository_dispatch:
+    types: [trigger-timeline]
+  schedule:
+    - cron: '30 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no DB writes, no LLM calls)'
+        required: false
+        type: boolean
+        default: false
+      from_id:
+        description: 'Override checkpoint and start from specific article ID'
+        required: false
+        type: string
+        default: ''
+      limit:
+        description: 'Limit number of articles to process in this run'
+        required: false
+        type: string
+        default: ''
+      run_tests:
+        description: 'Run pipeline unit test suite'
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: satya-timeline
+  cancel-in-progress: false
+
+jobs:
+  process_timeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+      actions: write
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install huggingface_hub libsql
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Run Pipeline Unit Tests
+        if: ${{ github.event.inputs.run_tests != 'false' }}
+        run: |
+          python -m unittest test_matching.py
+
+      # --- CACHE GEOMODELS ---
+      - name: Cache Gemma Models
+        id: cache-models
+        uses: actions/cache@v4
+        with:
+          path: ./models
+          key: gemma-2-local-models-q4-v3  # Shares cache key with promise tracker
+
+      - name: Download Gemma LLM Models
+        if: steps.cache-models.outputs.cache-hit != 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          mkdir -p models
+          python -c '
+          import os, shutil
+          from huggingface_hub import hf_hub_download
+          
+          temp_cache = "./models/.hf_cache"
+          os.makedirs(temp_cache, exist_ok=True)
+          
+          # Gemma 2B (for Milestone narration)
+          model_2b = "./models/gemma-2-2b-it-Q4_K_M.gguf"
+          if not os.path.exists(model_2b):
+              print("Downloading Gemma 2B...")
+              hf_hub_download(
+                  repo_id="bartowski/gemma-2-2b-it-GGUF",
+                  filename="gemma-2-2b-it-Q4_K_M.gguf",
+                  local_dir="./models",
+                  local_dir_use_symlinks=False,
+                  cache_dir=temp_cache
+              )
+              if os.path.exists(temp_cache):
+                  shutil.rmtree(temp_cache)
+                  os.makedirs(temp_cache, exist_ok=True)
+              
+          # Gemma 9B (for Attach Gate decision & Title creation)
+          model_9b = "./models/gemma-2-9b-it-Q6_K.gguf"
+          if not os.path.exists(model_9b):
+              print("Downloading Gemma 9B...")
+              hf_hub_download(
+                  repo_id="bartowski/gemma-2-9b-it-GGUF",
+                  filename="gemma-2-9b-it-Q6_K.gguf",
+                  local_dir="./models",
+                  local_dir_use_symlinks=False,
+                  cache_dir=temp_cache
+              )
+              if os.path.exists(temp_cache):
+                  shutil.rmtree(temp_cache)
+          '
+
+      - name: Run Timeline Pipeline
+        id: run-pipeline
+        env:
+          SATYA_DB_URL: ${{ secrets.SATYA_DB_URL }}
+          SATYA_DB_TOKEN: ${{ secrets.SATYA_DB_TOKEN }}
+          MODEL_2B_PATH: "./models/gemma-2-2b-it-Q4_K_M.gguf"
+          MODEL_9B_PATH: "./models/gemma-2-9b-it-Q6_K.gguf"
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          if [ -n "${{ github.event.inputs.from_id }}" ]; then
+            ARGS="$ARGS --from-id ${{ github.event.inputs.from_id }}"
+          fi
+          if [ -n "${{ github.event.inputs.limit }}" ]; then
+            ARGS="$ARGS --limit ${{ github.event.inputs.limit }}"
+          fi
+          
+          # Execute pipeline
+          python timeline_pipeline.py $ARGS
+
+      - name: Trigger next Timeline run if remaining
+        if: steps.run-pipeline.outputs.has_more == 'true' && github.event.inputs.dry_run != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "More articles remain. Triggering next Timeline Service run..."
+          curl -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/timeline_service.yml/dispatches \
+            -d '{"ref":"main"}'
+
+      # Failure Alert: Creates a GitHub Issue if the run crashes
+      - name: Report Pipeline Failure
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Timeline Pipeline Failure — Run #${{ github.run_number }}" \
+            --body "The timeline pipeline run failed. Please review the action run logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

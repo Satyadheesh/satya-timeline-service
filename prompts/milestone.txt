@@ -1,0 +1,15 @@
+<start_of_turn>user
+Write a single, concise milestone sentence summarizing the development in the news article below.
+
+Rules:
+1. Output exactly ONE sentence. Maximum 30 words. No quotes.
+2. Neutral, factual, and direct. Use strong active verbs.
+3. Every name, number, and fact MUST come from the article. Do not invent or extrapolate.
+4. Focus on the core development or event described.
+
+Original Title: {title}
+Article Summary: {summary}
+
+Milestone:
+<end_of_turn>
+<start_of_turn>model

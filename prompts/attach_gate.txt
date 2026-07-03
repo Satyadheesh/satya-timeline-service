@@ -1,0 +1,22 @@
+<start_of_turn>user
+You are an expert news clustering assistant. Determine if the new article belongs to the same ongoing event timeline as the existing event.
+
+Rules:
+1. ATTACH if the new article is a direct development, sequel, update, or consequence of the exact same ongoing event story.
+2. REJECT if it is a separate event, a different political development, or a different topic, even if it shares the same political figures/parties.
+3. Bias toward REJECT (precision over recall). If in doubt, output REJECT.
+4. Output MUST start with either "ATTACH" or "REJECT" in uppercase, followed by a colon and a brief one-sentence reason.
+
+Existing Event Summary:
+Title: {event_title}
+Entity Keys: {entity_keys}
+Recent Milestones:
+{recent_milestones}
+
+New Article:
+Title: {new_title}
+Summary: {new_summary}
+
+Is this the same ongoing story? Answer ATTACH or REJECT with a brief reason.
+<end_of_turn>
+<start_of_turn>model
