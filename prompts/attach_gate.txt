@@ -4,8 +4,12 @@ You are an expert news clustering assistant. Determine if the new article belong
 Rules:
 1. ATTACH if the new article is a direct development, sequel, update, or consequence of the exact same ongoing event story.
 2. REJECT if it is a separate event, a different political development, or a different topic, even if it shares the same political figures/parties.
-3. Bias toward REJECT (precision over recall). If in doubt, output REJECT.
-4. Output MUST start with either "ATTACH" or "REJECT" in uppercase, followed by a colon and a brief one-sentence reason.
+3. REJECT if the article involves the same parties or politicians but reports a
+   DIFFERENT development or controversy. Related is not the same story.
+   (e.g. a state assembly session is not the Union Budget; a campaign speech is
+   not the court case it mentions.)
+4. Bias toward REJECT (precision over recall). If in doubt, output REJECT.
+5. Output MUST start with either "ATTACH" or "REJECT" in uppercase, followed by a colon and a brief one-sentence reason.
 
 Existing Event Summary:
 Title: {event_title}

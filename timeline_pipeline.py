@@ -432,7 +432,15 @@ def main():
                     matched_event['centroid'] = new_centroid
                     matched_event['last_seen'] = scraped_at
                     matched_event['article_count'] += 1
-                    matched_event['entity_keys'] = matched_event['entity_keys'].union(art_entities)
+                    
+                    # Keep existing keys that also appear in new article first, cap at 15 keys
+                    existing_set = matched_event['entity_keys']
+                    new_set = set(art_entities)
+                    intersection_list = list(existing_set.intersection(new_set))
+                    remaining_new = list(new_set.difference(existing_set))
+                    remaining_existing = list(existing_set.difference(new_set))
+                    merged_keys_list = (intersection_list + remaining_new + remaining_existing)[:15]
+                    matched_event['entity_keys'] = set(merged_keys_list)
                     
                     attached_count += 1
                     logging.info(f"  [DRY-RUN] Simulated attach to Event ID {matched_event['id']}. New count: {matched_event['article_count']}")
@@ -467,7 +475,13 @@ def main():
                         new_centroid = new_centroid / new_centroid_norm
 
                     new_count = matched_event['article_count'] + 1
-                    merged_keys = list(matched_event['entity_keys'].union(art_entities))
+                    # Keep existing keys that also appear in new article first, cap at 15 keys
+                    existing_set = matched_event['entity_keys']
+                    new_set = set(art_entities)
+                    intersection_list = list(existing_set.intersection(new_set))
+                    remaining_new = list(new_set.difference(existing_set))
+                    remaining_existing = list(existing_set.difference(new_set))
+                    merged_keys = (intersection_list + remaining_new + remaining_existing)[:15]
 
                     # If count hits 2, generate Title using Gemma 9B
                     event_title = matched_event['title']

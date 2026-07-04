@@ -87,5 +87,43 @@ class TestTimelineService(unittest.TestCase):
         last_seen_dormant = max_scraped_at - 95 * 24 * 3600
         self.assertTrue(last_seen_dormant < cutoff)
 
+    def test_merge_and_cap_keys(self):
+        # Existing set of keys
+        existing_set = {"A", "B", "C", "D", "E"}
+        # Entities in new article
+        art_entities = ["C", "D", "F", "G"]
+        
+        new_set = set(art_entities)
+        intersection_list = list(existing_set.intersection(new_set))
+        remaining_new = list(new_set.difference(existing_set))
+        remaining_existing = list(existing_set.difference(new_set))
+        
+        combined = intersection_list + remaining_new + remaining_existing
+        merged_keys = combined[:15]
+        
+        # Intersection keys ('C', 'D') must be first
+        self.assertTrue(merged_keys[0] in ["C", "D"])
+        self.assertTrue(merged_keys[1] in ["C", "D"])
+        # New unique keys ('F', 'G') should follow
+        self.assertTrue(merged_keys[2] in ["F", "G"])
+        self.assertTrue(merged_keys[3] in ["F", "G"])
+        self.assertEqual(len(merged_keys), 7)
+
+        # Test capping at 15
+        large_existing = set(str(i) for i in range(20))
+        large_new = ["19", "20", "21"]
+        
+        large_new_set = set(large_new)
+        large_intersection_list = list(large_existing.intersection(large_new_set))
+        large_remaining_new = list(large_new_set.difference(large_existing))
+        large_remaining_existing = list(large_existing.difference(large_new_set))
+        
+        large_combined = large_intersection_list + large_remaining_new + large_remaining_existing
+        large_merged_keys = large_combined[:15]
+        
+        self.assertEqual(len(large_merged_keys), 15)
+        # 19 (intersection) is first
+        self.assertEqual(large_merged_keys[0], "19")
+
 if __name__ == '__main__':
     unittest.main()
