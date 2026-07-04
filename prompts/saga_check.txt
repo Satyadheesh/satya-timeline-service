@@ -1,0 +1,20 @@
+<start_of_turn>user
+Two news event chapters. Decide whether B is a CONTINUATION of the same
+underlying saga as A, or a SIMILAR-BUT-SEPARATE story.
+
+CHAPTER A: {a_title}
+First report: {a_founding_milestone}
+Period: {a_first_seen} to {a_last_seen}
+
+CHAPTER B: {b_title}
+First report: {b_founding_milestone}
+Period: {b_first_seen} to {b_last_seen}
+
+SEPARATE if these are recurring similar events (annual budgets, different
+elections, different court cases). SAME_SAGA only if B is unmistakably the
+same specific story continuing (same case, same scheme, same scandal).
+If in doubt, SEPARATE.
+
+Answer with one word: SAME_SAGA or SEPARATE
+<end_of_turn>
+<start_of_turn>model

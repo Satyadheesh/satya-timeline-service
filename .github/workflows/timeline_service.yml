@@ -27,6 +27,11 @@ on:
         required: false
         type: boolean
         default: true
+      audit_event_id:
+        description: 'Run closure audit calibration on a single event ID, printing KEEP/EVICT and exit without database writes'
+        required: false
+        type: string
+        default: ''
 
 concurrency:
   group: satya-timeline
@@ -132,6 +137,9 @@ jobs:
           fi
           if [ -n "${{ github.event.inputs.limit }}" ]; then
             ARGS="$ARGS --limit ${{ github.event.inputs.limit }}"
+          fi
+          if [ -n "${{ github.event.inputs.audit_event_id }}" ]; then
+            ARGS="$ARGS --audit-event ${{ github.event.inputs.audit_event_id }}"
           fi
           
           # Execute pipeline and capture outputs

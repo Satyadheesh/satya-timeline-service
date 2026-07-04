@@ -83,6 +83,188 @@ def extract_keys(party, minister, state, city):
             pass
     return list(keys)
 
+def get_founding_milestone(cursor, event_id):
+    cursor.execute("""
+        SELECT ea.milestone, a.rephrased_title, a.title
+        FROM event_articles ea
+        JOIN articles a ON ea.article_id = a.id
+        WHERE ea.event_id = ?
+        ORDER BY ea.event_date ASC LIMIT 1
+    """, (event_id,))
+    row = cursor.fetchone()
+    if row:
+        milestone, reph_title, orig_title = row
+        if milestone and milestone.strip():
+            return milestone.strip()
+        if reph_title and reph_title.strip():
+            return reph_title.strip()
+        if orig_title and orig_title.strip():
+            return orig_title.strip()
+    return "Untitled Founding Article"
+
+def assign_saga_id(cursor, ev1_id, ev2_id):
+    cursor.execute("SELECT saga_id FROM events WHERE id = ?", (ev1_id,))
+    row1 = cursor.fetchone()
+    s1 = row1[0] if row1 else None
+    
+    cursor.execute("SELECT saga_id FROM events WHERE id = ?", (ev2_id,))
+    row2 = cursor.fetchone()
+    s2 = row2[0] if row2 else None
+    
+    if s1 is None and s2 is None:
+        cursor.execute("SELECT COALESCE(MAX(saga_id), 0) + 1 FROM events")
+        new_saga_id = cursor.fetchone()[0]
+        cursor.execute("UPDATE events SET saga_id = ? WHERE id IN (?, ?)", (new_saga_id, ev1_id, ev2_id))
+    elif s1 is not None and s2 is None:
+        cursor.execute("UPDATE events SET saga_id = ? WHERE id = ?", (s1, ev2_id))
+    elif s1 is None and s2 is not None:
+        cursor.execute("UPDATE events SET saga_id = ? WHERE id = ?", (s2, ev1_id))
+    elif s1 != s2:
+        # Both have different saga_ids, unify (merge s2 into s1)
+        cursor.execute("UPDATE events SET saga_id = ? WHERE saga_id = ?", (s1, s2))
+        cursor.execute("UPDATE events SET saga_id = ? WHERE id = ?", (s1, ev2_id))
+
+def run_saga_link_check(cursor, llm_9b, event_id, saga_check_prompt_template):
+    cursor.execute("SELECT id, title, entity_keys, first_seen, last_seen, saga_id FROM events WHERE id = ?", (event_id,))
+    target = cursor.fetchone()
+    if not target or not target[1]: # Event must have a title
+        return
+        
+    t_id, t_title, t_keys_json, t_first, t_last, t_saga = target
+    t_keys = set(json.loads(t_keys_json))
+    t_founding = get_founding_milestone(cursor, event_id)
+    
+    # Query all closed events
+    cursor.execute("SELECT id, title, entity_keys, first_seen, last_seen, saga_id FROM events WHERE state = 'closed'")
+    closed_events = cursor.fetchall()
+    
+    for c_id, c_title, c_keys_json, c_first, c_last, c_saga in closed_events:
+        if c_id == t_id:
+            continue
+        if not c_title:
+            continue
+        # Skip if they already share the same saga_id
+        if t_saga is not None and c_saga is not None and t_saga == c_saga:
+            continue
+            
+        c_keys = set(json.loads(c_keys_json))
+        if len(t_keys.intersection(c_keys)) >= 2:
+            c_founding = get_founding_milestone(cursor, c_id)
+            
+            def fmt_date(ts):
+                if not ts: return "N/A"
+                return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
+                
+            if c_first < t_first:
+                ch_a = {"title": c_title, "founding": c_founding, "first": fmt_date(c_first), "last": fmt_date(c_last)}
+                ch_b = {"title": t_title, "founding": t_founding, "first": fmt_date(t_first), "last": fmt_date(t_last)}
+            else:
+                ch_a = {"title": t_title, "founding": t_founding, "first": fmt_date(t_first), "last": fmt_date(t_last)}
+                ch_b = {"title": c_title, "founding": c_founding, "first": fmt_date(c_first), "last": fmt_date(c_last)}
+                
+            prompt = saga_check_prompt_template.format(
+                a_title=ch_a["title"],
+                a_founding_milestone=ch_a["founding"],
+                a_first_seen=ch_a["first"],
+                a_last_seen=ch_a["last"],
+                b_title=ch_b["title"],
+                b_founding_milestone=ch_b["founding"],
+                b_first_seen=ch_b["first"],
+                b_last_seen=ch_b["last"]
+            )
+            
+            output = llm_9b(prompt, max_tokens=100, stop=["<end_of_turn>"], temperature=0.0)
+            res_text = output['choices'][0]['text'].strip().upper()
+            
+            if res_text.startswith("SAME_SAGA"):
+                logging.info(f"[SAGA LINK] Event {t_id} linked with Event {c_id} as SAME_SAGA.")
+                assign_saga_id(cursor, t_id, c_id)
+                # Refresh target saga_id in case it was updated
+                cursor.execute("SELECT saga_id FROM events WHERE id = ?", (t_id,))
+                t_row = cursor.fetchone()
+                t_saga = t_row[0] if t_row else None
+
+def evict_article_to_new_event(cursor, encoder, event_id, article_id):
+    cursor.execute("""
+        SELECT rephrased_title, title, rephrased_article, scraped_at,
+               party_mentioned, ministers_mentioned, states_mentioned, cities_mentioned
+        FROM articles WHERE id = ?
+    """, (article_id,))
+    row = cursor.fetchone()
+    if not row:
+        return
+    
+    reph_title, orig_title, reph_art_blob, scraped_at, party, minister, state, city = row
+    title_text = reph_title or orig_title or ""
+    article_text = decompress_text(reph_art_blob)
+    combined_text = f"{title_text} {article_text}".strip()
+    
+    embedding = encoder.encode(combined_text, convert_to_numpy=True)
+    norm = np.linalg.norm(embedding)
+    if norm > 0:
+        embedding = embedding / norm
+        
+    art_entities = extract_keys(party, minister, state, city)
+    
+    # Create new event (invisible, state='closed')
+    cursor.execute("""
+        INSERT INTO events (title, slug, entity_keys, centroid, first_seen, last_seen, article_count, state)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (None, None, json.dumps(art_entities), embedding.tobytes(), scraped_at, scraped_at, 1, 'closed'))
+    new_ev_id = cursor.lastrowid
+    
+    # Move article to new event
+    cursor.execute("""
+        UPDATE event_articles
+        SET event_id = ?
+        WHERE event_id = ? AND article_id = ?
+    """, (new_ev_id, event_id, article_id))
+
+def run_closure_ceremony(cursor, encoder, llm_9b, event_id, closure_audit_prompt_template, saga_check_prompt_template):
+    # 1. Exit Audit
+    # Skip audit for events with <= 2 articles
+    cursor.execute("SELECT COUNT(*) FROM event_articles WHERE event_id = ?", (event_id,))
+    article_count = cursor.fetchone()[0]
+    
+    if article_count > 2:
+        cursor.execute("SELECT title FROM events WHERE id = ?", (event_id,))
+        row = cursor.fetchone()
+        event_title = row[0] if row else None
+        event_title = event_title or "Untitled Event"
+        founding_milestone = get_founding_milestone(cursor, event_id)
+        
+        cursor.execute("""
+            SELECT ea.article_id, ea.milestone, a.title, a.rephrased_title
+            FROM event_articles ea
+            JOIN articles a ON ea.article_id = a.id
+            WHERE ea.event_id = ?
+        """, (event_id,))
+        member_articles = cursor.fetchall()
+        
+        for art_id, milestone, orig_title, reph_title in member_articles:
+            art_milestone = milestone or reph_title or orig_title or "No Title"
+            art_title = reph_title or orig_title or "No Title"
+            
+            prompt = closure_audit_prompt_template.format(
+                event_title=event_title,
+                founding_milestone=founding_milestone,
+                article_title=art_title,
+                milestone=art_milestone
+            )
+            
+            output = llm_9b(prompt, max_tokens=100, stop=["<end_of_turn>"], temperature=0.0)
+            res_text = output['choices'][0]['text'].strip().upper()
+            
+            if res_text.startswith("EVICT"):
+                logging.info(f"[EVICT] Event {event_id}: Evicted Article {art_id} | Raw LLM: {res_text}")
+                evict_article_to_new_event(cursor, encoder, event_id, art_id)
+                cursor.execute("UPDATE events SET article_count = article_count - 1 WHERE id = ?", (event_id,))
+            else:
+                logging.info(f"[KEEP] Event {event_id}: Kept Article {art_id} | Raw LLM: {res_text}")
+                
+    # 2. Saga Link Check
+    run_saga_link_check(cursor, llm_9b, event_id, saga_check_prompt_template)
+
 # Read prompt helper
 def read_prompt(name):
     prompt_path = os.path.join(os.path.dirname(__file__), 'prompts', f"{name}.txt")
@@ -208,6 +390,7 @@ def main():
     parser.add_argument('--limit', type=int, help="Limit number of articles to process in this run")
     parser.add_argument('--batch-size', type=int, default=25, help="Number of articles to process in this batch")
     parser.add_argument('--sim-threshold', type=float, default=0.60, help="Cosine similarity threshold for matches")
+    parser.add_argument('--audit-event', type=int, help="Run closure audit calibration on a single event ID, printing KEEP/EVICT and exit without modifying database")
     args = parser.parse_args()
 
     # Environment variables override BATCH_SIZE
@@ -226,7 +409,73 @@ def main():
         logging.critical(f"Database connection failed: {e}")
         sys.exit(1)
 
-    # 1. Cursor Loading
+    # 1. Cursor Loading / Audit Event check
+    if args.audit_event is not None:
+        try:
+            # Load models (only 9b is needed)
+            _, _, llm_9b = load_models(dry_run=False)
+            closure_audit_prompt_template = read_prompt('closure_audit')
+        except Exception as e:
+            logging.critical(f"Failed to load models/prompts for calibration: {e}")
+            conn.close()
+            sys.exit(1)
+            
+        logging.info(f"Running audit calibration for Event ID {args.audit_event}...")
+        # Fetch event info
+        cursor.execute("SELECT title FROM events WHERE id = ?", (args.audit_event,))
+        row = cursor.fetchone()
+        if not row:
+            logging.critical(f"Event ID {args.audit_event} not found.")
+            conn.close()
+            sys.exit(1)
+        event_title = row[0] or "Untitled Event"
+        founding_milestone = get_founding_milestone(cursor, args.audit_event)
+        
+        # Fetch member articles
+        cursor.execute("""
+            SELECT ea.article_id, ea.milestone, a.title, a.rephrased_title
+            FROM event_articles ea
+            JOIN articles a ON ea.article_id = a.id
+            WHERE ea.event_id = ?
+        """, (args.audit_event,))
+        member_articles = cursor.fetchall()
+        
+        print(f"Auditing Event {args.audit_event} - '{event_title}'")
+        print(f"Founding Milestone: '{founding_milestone}'")
+        print(f"Total articles to audit: {len(member_articles)}")
+        
+        keep_count = 0
+        evict_count = 0
+        for art_id, milestone, orig_title, reph_title in member_articles:
+            art_milestone = milestone or reph_title or orig_title or "No Title"
+            art_title = reph_title or orig_title or "No Title"
+            
+            prompt = closure_audit_prompt_template.format(
+                event_title=event_title,
+                founding_milestone=founding_milestone,
+                article_title=art_title,
+                milestone=art_milestone
+            )
+            output = llm_9b(prompt, max_tokens=100, stop=["<end_of_turn>"], temperature=0.0)
+            response_text = output['choices'][0]['text'].strip()
+            decision = "KEEP" if not response_text.upper().startswith("EVICT") else "EVICT"
+            
+            if decision == "KEEP":
+                keep_count += 1
+            else:
+                evict_count += 1
+                
+            print(f"Article ID {art_id:5d}: {decision:5s} | Title: {art_title[:80]} | Milestone: {art_milestone[:80]} | LLM Raw: {response_text.strip()}")
+            
+        print("\n--- AUDIT SUMMARY ---")
+        print(f"Total Articles: {len(member_articles)}")
+        print(f"KEEP: {keep_count}")
+        print(f"EVICT: {evict_count}")
+        print("has_more=false")
+        print("articles_attached=0")
+        conn.close()
+        sys.exit(0)
+
     start_id = 0
     if args.from_id is not None:
         start_id = args.from_id
@@ -284,13 +533,19 @@ def main():
 
     # Read prompt templates if not in dry-run mode
     attach_prompt_template = ""
+    attach_adversarial_prompt_template = ""
     milestone_prompt_template = ""
     title_prompt_template = ""
+    closure_audit_prompt_template = ""
+    saga_check_prompt_template = ""
     if not args.dry_run:
         try:
             attach_prompt_template = read_prompt('attach_gate')
+            attach_adversarial_prompt_template = read_prompt('attach_gate_adversarial')
             milestone_prompt_template = read_prompt('milestone')
             title_prompt_template = read_prompt('event_title')
+            closure_audit_prompt_template = read_prompt('closure_audit')
+            saga_check_prompt_template = read_prompt('saga_check')
         except Exception as e:
             logging.critical(f"Failed to load prompt templates: {e}")
             conn.close()
@@ -299,7 +554,7 @@ def main():
     # 4. Load Open Events into Memory
     open_events = []
     try:
-        cursor.execute("SELECT id, title, entity_keys, centroid, last_seen, article_count FROM events WHERE state = 'open'")
+        cursor.execute("SELECT id, title, entity_keys, centroid, last_seen, article_count, first_seen FROM events WHERE state = 'open'")
         event_rows = cursor.fetchall()
         for r in event_rows:
             try:
@@ -309,7 +564,8 @@ def main():
                     'entity_keys': set(json.loads(r[2])),
                     'centroid': np.frombuffer(r[3], dtype=np.float32),
                     'last_seen': int(r[4]) if r[4] is not None else 0,
-                    'article_count': int(r[5])
+                    'article_count': int(r[5]),
+                    'first_seen': int(r[6]) if r[6] is not None else 0
                 })
             except Exception as ex:
                 logging.error(f"Error parsing event row {r[0]}: {ex}")
@@ -350,10 +606,10 @@ def main():
             best_match = None
             best_sim = -1.0
 
-            # Step 2: Filter candidates in memory
-            cutoff_time = scraped_at - 90 * 24 * 3600
+            # Step 2: Filter candidates in memory (candidates only if state='open' and first_seen > scraped_at - 21d)
+            cutoff_time = scraped_at - 21 * 24 * 3600
             for ev in open_events:
-                if ev['last_seen'] >= cutoff_time:
+                if ev['first_seen'] > cutoff_time:
                     shared_keys = ev['entity_keys'].intersection(art_entities)
                     if shared_keys:
                         sim = float(np.dot(ev['centroid'], embedding))
@@ -364,21 +620,10 @@ def main():
             logging.info(f"  Best similarity match: {best_sim:.4f} with Event ID {best_match['id'] if best_match else None}")
 
             # Do all database read operations BEFORE starting any LLM calls
-            milestone_summary = "- None"
             existing_milestones = []
             if best_sim >= args.sim_threshold and best_match is not None:
                 if not args.dry_run:
                     try:
-                        cursor.execute("""
-                            SELECT milestone, event_date FROM event_articles 
-                            WHERE event_id = ? 
-                            ORDER BY event_date DESC LIMIT 3
-                        """, (best_match['id'],))
-                        ms_rows = cursor.fetchall()
-                        recent_ms = [f"- {r[0]}" for r in ms_rows if r[0]]
-                        if recent_ms:
-                            milestone_summary = "\n".join(recent_ms)
-                        
                         # If count is 1, adding the new article will make it 2, triggering title generation
                         if best_match['article_count'] == 1:
                             cursor.execute("""
@@ -397,27 +642,50 @@ def main():
                     matched_event = best_match
                 else:
                     event_name = best_match['title'] or "Untitled Event"
+                    founding_milestone = get_founding_milestone(cursor, best_match['id'])
 
-                    # Format Prompt
-                    prompt = attach_prompt_template.format(
+                    # Format Vote 1 (strict editor)
+                    prompt1 = attach_prompt_template.format(
                         event_title=event_name,
+                        founding_milestone=founding_milestone,
                         entity_keys=", ".join(best_match['entity_keys']),
-                        recent_milestones=milestone_summary,
                         new_title=reph_title,
                         new_summary=decompressed_article[:800]
                     )
 
-                    # Invoke Gemma 9B (Gate)
-                    output = llm_9b(prompt, max_tokens=150, stop=["<end_of_turn>"], temperature=0.0)
-                    response_text = output['choices'][0]['text'].strip()
-                    logging.info(f"  Gemma 9B Response: {response_text}")
+                    # Format Vote 2 (skeptical fact-checker)
+                    prompt2 = attach_adversarial_prompt_template.format(
+                        event_title=event_name,
+                        founding_milestone=founding_milestone,
+                        new_title=reph_title,
+                        new_summary=decompressed_article[:800]
+                    )
+
+                    # Invoke Gemma 9B for Vote 1
+                    output1 = llm_9b(prompt1, max_tokens=150, stop=["<end_of_turn>"], temperature=0.0)
+                    response_text1 = output1['choices'][0]['text'].strip()
+                    vote1 = "ATTACH" if response_text1.upper().startswith("ATTACH") else "REJECT"
+
+                    # Invoke Gemma 9B for Vote 2
+                    output2 = llm_9b(prompt2, max_tokens=150, stop=["<end_of_turn>"], temperature=0.0)
+                    response_text2 = output2['choices'][0]['text'].strip()
+                    
+                    # Parse vote 2: last word of output. Anything other than BELONGS -> reject.
+                    tokens2 = [t.strip().upper() for t in response_text2.split() if t.strip()]
+                    vote2 = "NOT_BELONGS"
+                    if tokens2:
+                        last_token = re.sub(r'[^A-Z_]', '', tokens2[-1])
+                        if last_token == "BELONGS":
+                            vote2 = "BELONGS"
+
+                    logging.info(f"Nomination: article_id={art_id}, event_id={best_match['id']}, cosine={best_sim:.4f}, vote1={vote1}, vote2={vote2} | Raw1: {response_text1} | Raw2: {response_text2}")
 
                     # Validation
-                    if response_text.upper().startswith("ATTACH"):
+                    if vote1 == "ATTACH" and vote2 == "BELONGS":
                         matched_event = best_match
-                        logging.info(f"  [ATTACH] Confirmed by Gemma 9B.")
+                        logging.info(f"  [ATTACH] Confirmed by both votes.")
                     else:
-                        logging.info(f"  [REJECT] Rejected by Gemma 9B. Reason details: {response_text}")
+                        logging.info(f"  [REJECT] Rejected by gate. Votes: vote1={vote1}, vote2={vote2}")
 
             # Step 3: Attach or Create Event
             if matched_event is not None:
@@ -432,6 +700,7 @@ def main():
                     matched_event['centroid'] = new_centroid
                     matched_event['last_seen'] = scraped_at
                     matched_event['article_count'] += 1
+                    # Note: first_seen doesn't change on attach
                     
                     # Keep existing keys that also appear in new article first, cap at 15 keys
                     existing_set = matched_event['entity_keys']
@@ -529,6 +798,14 @@ def main():
                     matched_event['entity_keys'] = set(merged_keys)
                     matched_event['title'] = event_title
                     
+                    # Run Saga check at visibility (when count transitions to 2 articles and it gets a title)
+                    if new_count == 2 and event_title:
+                        try:
+                            run_saga_link_check(cursor, llm_9b, matched_event['id'], saga_check_prompt_template)
+                            conn.commit()
+                        except Exception as e:
+                            logging.error(f"Saga link check at visibility failed: {e}")
+                    
                     attached_count += 1
                     logging.info(f"  Attached to Event ID {matched_event['id']} successfully.")
             else:
@@ -541,7 +818,8 @@ def main():
                         'entity_keys': set(art_entities),
                         'centroid': embedding,
                         'last_seen': scraped_at,
-                        'article_count': 1
+                        'article_count': 1,
+                        'first_seen': scraped_at
                     })
                     attached_count += 1
                     logging.info(f"  [DRY-RUN] Simulated create new Event ID {new_ev_id}.")
@@ -564,7 +842,8 @@ def main():
                         'entity_keys': set(art_entities),
                         'centroid': embedding,
                         'last_seen': scraped_at,
-                        'article_count': 1
+                        'article_count': 1,
+                        'first_seen': scraped_at
                     })
                     attached_count += 1
                     logging.info(f"  Created new invisible Event ID {new_ev_id}.")
@@ -586,35 +865,53 @@ def main():
                     sys.exit(1)
             continue
 
-    # 6. Dormancy Sweep (Logical Clock)
-    # Mark open events in database as 'dormant' if they haven't seen updates for 90 days relative to max_scraped_at
+    # 6. Chapter Closure Sweep (Logical Clock)
+    # state='open' AND first_seen < batch_max_scraped_at - 21d -> run CLOSURE CEREMONY -> set state='closed'
     if not args.dry_run and max_scraped_at > 0:
-        dormancy_cutoff = max_scraped_at - 90 * 24 * 3600
-        logging.info(f"\nRunning dormancy sweep relative to logical clock cutoff: {dormancy_cutoff}...")
-        for attempt in range(2):
+        closure_cutoff = max_scraped_at - 21 * 24 * 3600
+        logging.info(f"\nRunning chapter closure sweep relative to logical clock cutoff: {closure_cutoff}...")
+        
+        # 1. One-off migration of dormant events to closed state
+        try:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE events SET state = 'closed' WHERE state = 'dormant'")
+            migrated = cursor.rowcount
+            if migrated > 0:
+                logging.info(f"Migrated {migrated} dormant events to closed state.")
+            conn.commit()
+        except Exception as e:
+            logging.error(f"Failed to migrate dormant events: {e}")
             try:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    UPDATE events 
-                    SET state = 'dormant' 
-                    WHERE state = 'open' AND last_seen < ?
-                """, (dormancy_cutoff,))
-                dormant_count = cursor.rowcount
-                conn.commit()
-                logging.info(f"Dormancy sweep completed. Marked {dormant_count} events as dormant.")
-                break
-            except Exception as e:
-                logging.error(f"Failed to execute dormancy sweep (attempt {attempt+1}): {e}")
-                try:
-                    conn.rollback()
-                except Exception:
-                    pass
-                if attempt == 0:
+                conn.rollback()
+            except:
+                pass
+                
+        # 2. Find all open events that need to close
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM events WHERE state = 'open' AND first_seen < ?", (closure_cutoff,))
+            events_to_close = [r[0] for r in cursor.fetchall()]
+            
+            if events_to_close:
+                logging.info(f"Found {len(events_to_close)} events to close.")
+                for ev_id in events_to_close:
+                    logging.info(f"Closing Event ID {ev_id}...")
                     try:
-                        conn.close()
-                    except Exception:
-                        pass
-                    conn = get_db_connection()
+                        run_closure_ceremony(
+                            cursor, encoder, llm_9b, ev_id,
+                            closure_audit_prompt_template, saga_check_prompt_template
+                        )
+                        cursor.execute("UPDATE events SET state = 'closed' WHERE id = ?", (ev_id,))
+                        conn.commit()
+                        logging.info(f"Event ID {ev_id} closed successfully.")
+                    except Exception as e:
+                        logging.error(f"Failed to run closure ceremony for Event ID {ev_id}: {e}")
+                        try:
+                            conn.rollback()
+                        except:
+                            pass
+        except Exception as e:
+            logging.error(f"Failed to query events for closure sweep: {e}")
 
     # Check if there are more articles remaining in the table (with reconnect logic)
     has_more = "false"

@@ -1,0 +1,16 @@
+<start_of_turn>user
+You are auditing a news event archive before it is permanently sealed.
+
+EVENT TITLE: {event_title}
+THE STORY (first report): {founding_milestone}
+
+MEMBER ARTICLE: {article_title}
+ITS MILESTONE: {milestone}
+
+Is this article a development of THIS SPECIFIC STORY?
+KEEP only if unmistakably yes. If it is merely related, same-party politics,
+a different controversy, or a general roundup — EVICT.
+
+Answer with one word: KEEP or EVICT
+<end_of_turn>
+<start_of_turn>model
