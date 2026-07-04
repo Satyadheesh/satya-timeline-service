@@ -124,22 +124,22 @@ def assign_saga_id(cursor, ev1_id, ev2_id):
         cursor.execute("UPDATE events SET saga_id = ? WHERE saga_id = ?", (s1, s2))
         cursor.execute("UPDATE events SET saga_id = ? WHERE id = ?", (s1, ev2_id))
 
-def run_saga_link_check(cursor, llm_9b, event_id, saga_check_prompt_template):
-    cursor.execute("SELECT id, title, entity_keys, first_seen, last_seen, saga_id FROM events WHERE id = ?", (event_id,))
-    target = cursor.fetchone()
-    if not target or not target[1]: # Event must have a title
-        return
-        
-    t_id, t_title, t_keys_json, t_first, t_last, t_saga = target
-    t_keys = set(json.loads(t_keys_json))
+def check_saga_links_in_memory(cursor, llm_9b, event_id, event_title, merged_keys, first_seen, last_seen, saga_check_prompt_template):
+    linked_ids = []
+    t_keys = set(merged_keys)
     t_founding = get_founding_milestone(cursor, event_id)
     
     # Query all closed events
     cursor.execute("SELECT id, title, entity_keys, first_seen, last_seen, saga_id FROM events WHERE state = 'closed'")
     closed_events = cursor.fetchall()
     
+    # Fetch target current saga_id
+    cursor.execute("SELECT saga_id FROM events WHERE id = ?", (event_id,))
+    row = cursor.fetchone()
+    t_saga = row[0] if row else None
+    
     for c_id, c_title, c_keys_json, c_first, c_last, c_saga in closed_events:
-        if c_id == t_id:
+        if c_id == event_id:
             continue
         if not c_title:
             continue
@@ -155,11 +155,11 @@ def run_saga_link_check(cursor, llm_9b, event_id, saga_check_prompt_template):
                 if not ts: return "N/A"
                 return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
                 
-            if c_first < t_first:
+            if c_first < first_seen:
                 ch_a = {"title": c_title, "founding": c_founding, "first": fmt_date(c_first), "last": fmt_date(c_last)}
-                ch_b = {"title": t_title, "founding": t_founding, "first": fmt_date(t_first), "last": fmt_date(t_last)}
+                ch_b = {"title": event_title, "founding": t_founding, "first": fmt_date(first_seen), "last": fmt_date(last_seen)}
             else:
-                ch_a = {"title": t_title, "founding": t_founding, "first": fmt_date(t_first), "last": fmt_date(t_last)}
+                ch_a = {"title": event_title, "founding": t_founding, "first": fmt_date(first_seen), "last": fmt_date(last_seen)}
                 ch_b = {"title": c_title, "founding": c_founding, "first": fmt_date(c_first), "last": fmt_date(c_last)}
                 
             prompt = saga_check_prompt_template.format(
@@ -177,12 +177,11 @@ def run_saga_link_check(cursor, llm_9b, event_id, saga_check_prompt_template):
             res_text = output['choices'][0]['text'].strip().upper()
             
             if res_text.startswith("SAME_SAGA"):
-                logging.info(f"[SAGA LINK] Event {t_id} linked with Event {c_id} as SAME_SAGA.")
-                assign_saga_id(cursor, t_id, c_id)
-                # Refresh target saga_id in case it was updated
-                cursor.execute("SELECT saga_id FROM events WHERE id = ?", (t_id,))
-                t_row = cursor.fetchone()
-                t_saga = t_row[0] if t_row else None
+                logging.info(f"[SAGA LINK MEMORY] Event {event_id} and Event {c_id} linked as SAME_SAGA.")
+                linked_ids.append(c_id)
+                if t_saga is None:
+                    t_saga = c_saga
+    return linked_ids
 
 def evict_article_to_new_event(cursor, encoder, event_id, article_id):
     cursor.execute("""
@@ -220,17 +219,22 @@ def evict_article_to_new_event(cursor, encoder, event_id, article_id):
         WHERE event_id = ? AND article_id = ?
     """, (new_ev_id, event_id, article_id))
 
-def run_closure_ceremony(cursor, encoder, llm_9b, event_id, closure_audit_prompt_template, saga_check_prompt_template):
+def get_closure_decisions(cursor, llm_9b, event_id, closure_audit_prompt_template, saga_check_prompt_template):
+    evicted_article_ids = []
+    linked_event_ids = []
+    
     # 1. Exit Audit
-    # Skip audit for events with <= 2 articles
     cursor.execute("SELECT COUNT(*) FROM event_articles WHERE event_id = ?", (event_id,))
     article_count = cursor.fetchone()[0]
     
     if article_count > 2:
-        cursor.execute("SELECT title FROM events WHERE id = ?", (event_id,))
-        row = cursor.fetchone()
-        event_title = row[0] if row else None
-        event_title = event_title or "Untitled Event"
+        cursor.execute("SELECT title, first_seen, last_seen, entity_keys FROM events WHERE id = ?", (event_id,))
+        ev_row = cursor.fetchone()
+        event_title = ev_row[0] or "Untitled Event"
+        first_seen = ev_row[1] or 0
+        last_seen = ev_row[2] or 0
+        entity_keys = json.loads(ev_row[3]) if ev_row[3] else []
+        
         founding_milestone = get_founding_milestone(cursor, event_id)
         
         cursor.execute("""
@@ -256,14 +260,38 @@ def run_closure_ceremony(cursor, encoder, llm_9b, event_id, closure_audit_prompt
             res_text = output['choices'][0]['text'].strip().upper()
             
             if res_text.startswith("EVICT"):
-                logging.info(f"[EVICT] Event {event_id}: Evicted Article {art_id} | Raw LLM: {res_text}")
-                evict_article_to_new_event(cursor, encoder, event_id, art_id)
-                cursor.execute("UPDATE events SET article_count = article_count - 1 WHERE id = ?", (event_id,))
+                logging.info(f"[EVICT DECISION] Event {event_id}: Evict Article {art_id}")
+                evicted_article_ids.append(art_id)
             else:
-                logging.info(f"[KEEP] Event {event_id}: Kept Article {art_id} | Raw LLM: {res_text}")
-                
+                logging.info(f"[KEEP DECISION] Event {event_id}: Keep Article {art_id}")
+    else:
+        cursor.execute("SELECT title, first_seen, last_seen, entity_keys FROM events WHERE id = ?", (event_id,))
+        ev_row = cursor.fetchone()
+        event_title = ev_row[0] if ev_row else "Untitled Event"
+        first_seen = ev_row[1] if ev_row else 0
+        last_seen = ev_row[2] if ev_row else 0
+        entity_keys = json.loads(ev_row[3]) if ev_row and ev_row[3] else []
+        
     # 2. Saga Link Check
-    run_saga_link_check(cursor, llm_9b, event_id, saga_check_prompt_template)
+    if event_title:
+        linked_event_ids = check_saga_links_in_memory(
+            cursor, llm_9b, event_id, event_title, entity_keys, first_seen, last_seen, saga_check_prompt_template
+        )
+        
+    return evicted_article_ids, linked_event_ids
+
+def do_closure_write(cursor, encoder, event_id, evicted_article_ids, linked_event_ids):
+    # Apply evictions
+    for art_id in evicted_article_ids:
+        evict_article_to_new_event(cursor, encoder, event_id, art_id)
+        cursor.execute("UPDATE events SET article_count = article_count - 1 WHERE id = ?", (event_id,))
+        
+    # Apply saga linkages
+    for other_id in linked_event_ids:
+        assign_saga_id(cursor, event_id, other_id)
+        
+    # Close the event
+    cursor.execute("UPDATE events SET state = 'closed' WHERE id = ?", (event_id,))
 
 # Read prompt helper
 def read_prompt(name):
@@ -334,7 +362,7 @@ def run_write_burst_with_reconnect(conn, write_func, *args, **kwargs):
             else:
                 raise e
 
-def do_attach_write(cursor, matched_event_id, art_id, milestone, scraped_at, new_centroid, new_count, merged_keys, event_title, event_slug):
+def do_attach_write(cursor, matched_event_id, art_id, milestone, scraped_at, new_centroid, new_count, merged_keys, event_title, event_slug, linked_saga_event_ids):
     cursor.execute("""
         INSERT INTO event_articles (event_id, article_id, milestone, event_date)
         VALUES (?, ?, ?, ?)
@@ -354,6 +382,9 @@ def do_attach_write(cursor, matched_event_id, art_id, milestone, scraped_at, new
         matched_event_id
     ))
     
+    for other_id in linked_saga_event_ids:
+        assign_saga_id(cursor, matched_event_id, other_id)
+        
     cursor.execute("INSERT OR REPLACE INTO timeline_checkpoint (id, last_article_id) VALUES (1, ?)", (art_id,))
 
 def do_create_write(cursor, art_id, art_entities, embedding, scraped_at):
@@ -774,6 +805,18 @@ def main():
                         else:
                             logging.error(f"  Generated Title too long ({len(gen_title.split())} words): '{gen_title}'. Keeping NULL.")
 
+                    # Run Saga check at visibility (when count transitions to 2 articles and it gets a title)
+                    linked_saga_event_ids = []
+                    if new_count == 2 and event_title:
+                        try:
+                            linked_saga_event_ids = check_saga_links_in_memory(
+                                cursor, llm_9b, matched_event['id'], event_title,
+                                merged_keys, matched_event['first_seen'], scraped_at,
+                                saga_check_prompt_template
+                            )
+                        except Exception as e:
+                            logging.error(f"Saga link check in memory failed: {e}")
+
                     # Write to database (transactional execution per article using hot reconnect wrapper)
                     conn, _ = run_write_burst_with_reconnect(
                         conn,
@@ -786,7 +829,8 @@ def main():
                         new_count,
                         merged_keys,
                         event_title,
-                        event_slug
+                        event_slug,
+                        linked_saga_event_ids
                     )
                     # Refresh cursor after reconnect/retry block in case it reconnected
                     cursor = conn.cursor()
@@ -797,14 +841,6 @@ def main():
                     matched_event['article_count'] = new_count
                     matched_event['entity_keys'] = set(merged_keys)
                     matched_event['title'] = event_title
-                    
-                    # Run Saga check at visibility (when count transitions to 2 articles and it gets a title)
-                    if new_count == 2 and event_title:
-                        try:
-                            run_saga_link_check(cursor, llm_9b, matched_event['id'], saga_check_prompt_template)
-                            conn.commit()
-                        except Exception as e:
-                            logging.error(f"Saga link check at visibility failed: {e}")
                     
                     attached_count += 1
                     logging.info(f"  Attached to Event ID {matched_event['id']} successfully.")
@@ -897,19 +933,27 @@ def main():
                 for ev_id in events_to_close:
                     logging.info(f"Closing Event ID {ev_id}...")
                     try:
-                        run_closure_ceremony(
-                            cursor, encoder, llm_9b, ev_id,
+                        # Refresh cursor for reads
+                        cursor = conn.cursor()
+                        # Phase 1: All LLM decisions gathered in memory (No database writes during this phase)
+                        evicted_ids, linked_ids = get_closure_decisions(
+                            cursor, llm_9b, ev_id,
                             closure_audit_prompt_template, saga_check_prompt_template
                         )
-                        cursor.execute("UPDATE events SET state = 'closed' WHERE id = ?", (ev_id,))
-                        conn.commit()
+                        
+                        # Phase 2: Apply all changes in one single write transaction burst
+                        conn, _ = run_write_burst_with_reconnect(
+                            conn,
+                            do_closure_write,
+                            encoder,
+                            ev_id,
+                            evicted_ids,
+                            linked_ids
+                        )
+                        cursor = conn.cursor()
                         logging.info(f"Event ID {ev_id} closed successfully.")
                     except Exception as e:
                         logging.error(f"Failed to run closure ceremony for Event ID {ev_id}: {e}")
-                        try:
-                            conn.rollback()
-                        except:
-                            pass
         except Exception as e:
             logging.error(f"Failed to query events for closure sweep: {e}")
 
