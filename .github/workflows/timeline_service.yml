@@ -3,8 +3,8 @@ name: Satya Timeline Service
 on:
   repository_dispatch:
     types: [trigger-timeline]
-  schedule:
-    - cron: '30 */6 * * *'
+  # schedule:
+  #   - cron: '30 */6 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
