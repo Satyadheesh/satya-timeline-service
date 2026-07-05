@@ -69,7 +69,9 @@ def run_eval():
         prompt = prompt_template.format(
             event_title=event_title,
             scope=scope,
+            event_began=c.get("event_began", "N/A"),
             recent_milestones=recent_milestones,
+            article_date=c.get("article_date", "N/A"),
             new_title=article_title,
             new_summary=article_summary[:800]
         )

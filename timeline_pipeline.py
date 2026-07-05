@@ -721,11 +721,16 @@ def main():
                     
                     scope_val = best_match.get('scope') or founding_milestone
 
+                    event_began_str = datetime.fromtimestamp(best_match['first_seen']).strftime("%Y-%m-%d") if best_match['first_seen'] else "N/A"
+                    article_date_str = datetime.fromtimestamp(scraped_at).strftime("%Y-%m-%d") if scraped_at else "N/A"
+
                     # Format Single attach gate prompt
                     prompt = attach_prompt_template.format(
                         event_title=event_name,
                         scope=scope_val,
+                        event_began=event_began_str,
                         recent_milestones=recent_milestones_str,
+                        article_date=article_date_str,
                         new_title=reph_title,
                         new_summary=decompressed_article[:800]
                     )
