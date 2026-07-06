@@ -3,16 +3,16 @@ import sys
 import time
 import json
 import gc
+import shutil
 from huggingface_hub import hf_hub_download
 from llama_cpp import Llama
 
-def download_models():
+def download_gemma():
     models_dir = "./models"
     os.makedirs(models_dir, exist_ok=True)
     temp_cache = "./models/.hf_cache"
     os.makedirs(temp_cache, exist_ok=True)
 
-    # Gemma 9B
     model_9b_path = os.path.join(models_dir, "gemma-2-9b-it-Q6_K.gguf")
     if not os.path.exists(model_9b_path):
         print("Downloading Gemma 9B...")
@@ -23,19 +23,28 @@ def download_models():
             local_dir_use_symlinks=False,
             cache_dir=temp_cache
         )
+    return model_9b_path
 
-    # Qwen 14B
-    model_qwen_path = os.path.join(models_dir, "Qwen2.5-14B-Instruct-Q5_K_M.gguf")
+def download_qwen():
+    qwen_dir = "./qwen_models"
+    os.makedirs(qwen_dir, exist_ok=True)
+    temp_cache = "./qwen_models/.hf_cache"
+    os.makedirs(temp_cache, exist_ok=True)
+
+    model_qwen_path = os.path.join(qwen_dir, "Qwen2.5-14B-Instruct-Q5_K_M.gguf")
     if not os.path.exists(model_qwen_path):
         print("Downloading Qwen 14B...")
         hf_hub_download(
             repo_id="bartowski/Qwen2.5-14B-Instruct-GGUF",
             filename="Qwen2.5-14B-Instruct-Q5_K_M.gguf",
-            local_dir=models_dir,
+            local_dir=qwen_dir,
             local_dir_use_symlinks=False,
             cache_dir=temp_cache
         )
-    return model_9b_path, model_qwen_path
+    # Clean cache dir
+    if os.path.exists(temp_cache):
+        shutil.rmtree(temp_cache)
+    return model_qwen_path
 
 def run():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -62,7 +71,7 @@ def run():
     qwen_template = qwen_template.replace("<end_of_turn>", "<|im_end|>")
     qwen_template = qwen_template.replace("<start_of_turn>model", "<|im_start|>assistant")
 
-    model_9b_path, model_qwen_path = download_models()
+    model_9b_path = download_gemma()
 
     # --- GEMMA 9B PILOT ---
     print("\n--- Starting Gemma 9B Pilot ---")
@@ -94,7 +103,16 @@ def run():
     gemma_total_time = sum(gemma_times)
     del llm_9b
     gc.collect()
+
+    # Remove Gemma 9B model file to release 7.6GB of SSD space
+    if os.path.exists(model_9b_path):
+        print(f"Removing Gemma 9B model file to free disk space: {model_9b_path}")
+        os.remove(model_9b_path)
+    
     time.sleep(2)
+
+    # Download Qwen 14B to a separate temporary directory
+    model_qwen_path = download_qwen()
 
     # --- QWEN 14B PILOT ---
     print("\n--- Starting Qwen 14B Pilot ---")
@@ -126,6 +144,15 @@ def run():
     qwen_total_time = sum(qwen_times)
     del llm_qwen
     gc.collect()
+
+    # Clean up Qwen 14B model file and temp folder
+    if os.path.exists(model_qwen_path):
+        print(f"Cleaning up Qwen 14B file: {model_qwen_path}")
+        os.remove(model_qwen_path)
+    qwen_dir = os.path.dirname(model_qwen_path)
+    if os.path.exists(qwen_dir):
+        print(f"Removing temporary Qwen directory: {qwen_dir}")
+        shutil.rmtree(qwen_dir)
 
     print("\n=== PILOT TIMING RESULTS ===")
     print(f"Gemma 9B Total: {gemma_total_time:.2f}s (avg {gemma_total_time/len(test_cases):.2f}s per call) | Total completion tokens: {gemma_tokens}")
