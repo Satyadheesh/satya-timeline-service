@@ -1,4 +1,4 @@
-<start_of_turn>user
+<|im_start|>user
 An EVENT is one named occurrence or process — a budget, an election, a court
 case, a scheme, a disaster, a controversy — including its reactions, analyses,
 follow-ups and consequences. An event is NOT a topic, a region, a party, or a
@@ -15,5 +15,5 @@ Write the scope of this event in exactly two sentences:
    or regions are excluded unless they are developments of this occurrence.
 
 Write only the two sentences.
-<end_of_turn>
-<start_of_turn>model
+<|im_end|>
+<|im_start|>assistant

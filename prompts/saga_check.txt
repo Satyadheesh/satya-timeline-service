@@ -1,4 +1,4 @@
-<start_of_turn>user
+<|im_start|>user
 Two news event chapters. Decide whether B is a CONTINUATION of the same
 underlying saga as A, or a SIMILAR-BUT-SEPARATE story.
 
@@ -16,5 +16,5 @@ same specific story continuing (same case, same scheme, same scandal).
 If in doubt, SEPARATE.
 
 Answer with one word: SAME_SAGA or SEPARATE
-<end_of_turn>
-<start_of_turn>model
+<|im_end|>
+<|im_start|>assistant

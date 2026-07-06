@@ -1,4 +1,4 @@
-<start_of_turn>user
+<|im_start|>user
 Generate a short, neutral, factual title representing the ongoing event described by the milestones below.
 
 Rules:
@@ -12,5 +12,5 @@ Milestones:
 {milestones}
 
 Title:
-<end_of_turn>
-<start_of_turn>model
+<|im_end|>
+<|im_start|>assistant

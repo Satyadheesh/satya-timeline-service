@@ -1,4 +1,4 @@
-<start_of_turn>user
+<|im_start|>user
 You are auditing a news event archive before it is permanently sealed.
 
 EVENT TITLE: {event_title}
@@ -14,5 +14,5 @@ occurrence, a general roundup, or other actions by the same people or regions.
 If in doubt, EVICT.
 
 Answer with one word: KEEP or EVICT
-<end_of_turn>
-<start_of_turn>model
+<|im_end|>
+<|im_start|>assistant

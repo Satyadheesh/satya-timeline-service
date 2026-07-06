@@ -1,4 +1,4 @@
-<start_of_turn>user
+<|im_start|>user
 An EVENT is one named occurrence or process — a budget, an election, a court
 case, a scheme, a disaster, a controversy — including its reactions, analyses,
 follow-ups and consequences. An event is NOT a topic, a region, a party, or a
@@ -29,5 +29,5 @@ Decide step by step:
 5. If in doubt, REJECT.
 
 Answer with one word: ATTACH or REJECT
-<end_of_turn>
-<start_of_turn>model
+<|im_end|>
+<|im_start|>assistant

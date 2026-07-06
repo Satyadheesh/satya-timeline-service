@@ -37,11 +37,6 @@ on:
         required: false
         type: boolean
         default: false
-      run_pilot:
-        description: 'Run pilot timing check'
-        required: false
-        type: boolean
-        default: false
 
 concurrency:
   group: satya-timeline-${{ github.event.inputs.audit_event_id || 'main' }}
@@ -82,14 +77,14 @@ jobs:
           python -m unittest test_matching.py
 
       # --- CACHE GEOMODELS ---
-      - name: Cache Gemma Models
+      - name: Cache LLM Models
         id: cache-models
         uses: actions/cache@v4
         with:
           path: ./models
-          key: gemma-2-local-models-q4-v3  # Shares cache key with promise tracker
+          key: qwen-14b-local-models-v1
 
-      - name: Download Gemma LLM Models
+      - name: Download LLM Models
         if: steps.cache-models.outputs.cache-hit != 'true' && github.event.inputs.dry_run != 'true'
         run: |
           mkdir -p models
@@ -115,13 +110,13 @@ jobs:
                   shutil.rmtree(temp_cache)
                   os.makedirs(temp_cache, exist_ok=True)
               
-          # Gemma 9B (for Attach Gate decision & Title creation)
-          model_9b = "./models/gemma-2-9b-it-Q6_K.gguf"
-          if not os.path.exists(model_9b):
-              print("Downloading Gemma 9B...")
+          # Qwen 14B (for Attach Gate decision, Scope, Saga, Closure & Title creation)
+          model_qwen = "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
+          if not os.path.exists(model_qwen):
+              print("Downloading Qwen 14B...")
               hf_hub_download(
-                  repo_id="bartowski/gemma-2-9b-it-GGUF",
-                  filename="gemma-2-9b-it-Q6_K.gguf",
+                  repo_id="bartowski/Qwen2.5-14B-Instruct-GGUF",
+                  filename="Qwen2.5-14B-Instruct-Q5_K_M.gguf",
                   local_dir="./models",
                   local_dir_use_symlinks=False,
                   cache_dir=temp_cache
@@ -130,15 +125,10 @@ jobs:
                   shutil.rmtree(temp_cache)
           '
 
-      - name: Run Pilot Timing Check
-        if: ${{ github.event.inputs.run_pilot == 'true' }}
-        run: |
-          python scratch/pilot_check.py
-
       - name: Run Evaluation Harness
         if: ${{ github.event.inputs.run_eval == 'true' }}
         env:
-          MODEL_9B_PATH: "./models/gemma-2-9b-it-Q6_K.gguf"
+          MODEL_GATE_PATH: "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
         run: |
           python run_eval.py
 
@@ -149,7 +139,7 @@ jobs:
           SATYA_DB_URL: ${{ secrets.SATYA_DB_URL }}
           SATYA_DB_TOKEN: ${{ secrets.SATYA_DB_TOKEN }}
           MODEL_2B_PATH: "./models/gemma-2-2b-it-Q4_K_M.gguf"
-          MODEL_9B_PATH: "./models/gemma-2-9b-it-Q6_K.gguf"
+          MODEL_GATE_PATH: "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
         run: |
           ARGS=""
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then

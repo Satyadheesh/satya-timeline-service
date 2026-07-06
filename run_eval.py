@@ -23,14 +23,14 @@ def run_eval():
     with open(prompt_path, "r", encoding="utf-8") as f:
         prompt_template = f.read()
 
-    # Load 9B model
-    model_9b_path = os.environ.get('MODEL_9B_PATH')
+    # Load Gate model (Qwen 14B)
+    model_9b_path = os.environ.get('MODEL_GATE_PATH') or os.environ.get('MODEL_9B_PATH')
     if not model_9b_path:
         # Check standard locations
         possible_paths = [
-            os.path.join(script_dir, "models", "gemma-2-9b-it-Q6_K.gguf"),
-            os.path.join(os.path.dirname(script_dir), "models", "gemma-2-9b-it-Q6_K.gguf"),
-            "./models/gemma-2-9b-it-Q6_K.gguf"
+            os.path.join(script_dir, "models", "Qwen2.5-14B-Instruct-Q5_K_M.gguf"),
+            os.path.join(os.path.dirname(script_dir), "models", "Qwen2.5-14B-Instruct-Q5_K_M.gguf"),
+            "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
         ]
         for p in possible_paths:
             if os.path.exists(p):
@@ -38,12 +38,12 @@ def run_eval():
                 break
     
     if not model_9b_path or not os.path.exists(model_9b_path):
-        print(f"Error: Gemma 9B model not found at {model_9b_path or 'any standard location'}")
+        print(f"Error: Gate model not found at {model_9b_path or 'any standard location'}")
         sys.exit(1)
 
-    print(f"Loading Gemma 9B model from: {model_9b_path}...")
+    print(f"Loading Qwen 14B model from: {model_9b_path}...")
     llm_9b = Llama(model_path=model_9b_path, n_ctx=2048, verbose=False)
-    print("Model loaded successfully.")
+    print("Qwen 14B model loaded successfully.")
 
     # Read cases
     cases = []
@@ -84,7 +84,7 @@ def run_eval():
                 new_summary=article_summary[:800]
             )
 
-            output = llm_9b(prompt, max_tokens=150, stop=["<end_of_turn>"], temperature=0.0)
+            output = llm_9b(prompt, max_tokens=150, stop=["<|im_end|>"], temperature=0.0)
             response_text = output['choices'][0]['text'].strip()
             predicted = "ATTACH" if response_text.upper().startswith("ATTACH") else "REJECT"
             stage = "llm-gate"

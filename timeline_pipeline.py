@@ -130,7 +130,7 @@ def generate_event_scope(llm_9b, template, title, summary):
             title=title or "Untitled Article",
             summary=summary[:1200] if summary else "No Summary Available"
         )
-        output = llm_9b(prompt, max_tokens=150, stop=["<end_of_turn>"], temperature=0.0)
+        output = llm_9b(prompt, max_tokens=150, stop=["<|im_end|>"], temperature=0.0)
         scope = output['choices'][0]['text'].strip()
         
         if not scope:
@@ -201,7 +201,7 @@ def check_saga_links_in_memory(cursor, llm_9b, event_id, event_title, merged_key
                 b_last_seen=ch_b["last"]
             )
             
-            output = llm_9b(prompt, max_tokens=100, stop=["<end_of_turn>"], temperature=0.0)
+            output = llm_9b(prompt, max_tokens=100, stop=["<|im_end|>"], temperature=0.0)
             res_text = output['choices'][0]['text'].strip().upper()
             
             if res_text.startswith("SAME_SAGA"):
@@ -286,7 +286,7 @@ def get_closure_decisions(cursor, llm_9b, event_id, closure_audit_prompt_templat
                 milestone=art_milestone
             )
             
-            output = llm_9b(prompt, max_tokens=100, stop=["<end_of_turn>"], temperature=0.0)
+            output = llm_9b(prompt, max_tokens=100, stop=["<|im_end|>"], temperature=0.0)
             res_text = output['choices'][0]['text'].strip().upper()
             
             if res_text.startswith("EVICT"):
@@ -347,17 +347,17 @@ def load_models(dry_run=False):
     encoder = SentenceTransformer('all-MiniLM-L6-v2')
 
     model_2b_path = os.environ.get('MODEL_2B_PATH', './models/gemma-2-2b-it-Q4_K_M.gguf')
-    model_9b_path = os.environ.get('MODEL_9B_PATH', './models/gemma-2-9b-it-Q6_K.gguf')
+    model_9b_path = os.environ.get('MODEL_GATE_PATH') or os.environ.get('MODEL_9B_PATH', './models/Qwen2.5-14B-Instruct-Q5_K_M.gguf')
 
     if not os.path.exists(model_2b_path):
         raise FileNotFoundError(f"Gemma 2B model not found at {model_2b_path}")
     if not os.path.exists(model_9b_path):
-        raise FileNotFoundError(f"Gemma 9B model not found at {model_9b_path}")
+        raise FileNotFoundError(f"Gate model not found at {model_9b_path}")
 
     logging.info(f"Loading Gemma 2B from {model_2b_path}...")
     llm_2b = Llama(model_path=model_2b_path, n_ctx=2048, verbose=False)
 
-    logging.info(f"Loading Gemma 9B from {model_9b_path}...")
+    logging.info(f"Loading Qwen 14B from {model_9b_path}...")
     llm_9b = Llama(model_path=model_9b_path, n_ctx=2048, verbose=False)
 
     return encoder, llm_2b, llm_9b
@@ -518,7 +518,7 @@ def main():
                 article_title=art_title,
                 milestone=art_milestone
             )
-            output = llm_9b(prompt, max_tokens=100, stop=["<end_of_turn>"], temperature=0.0)
+            output = llm_9b(prompt, max_tokens=100, stop=["<|im_end|>"], temperature=0.0)
             response_text = output['choices'][0]['text'].strip()
             decision = "KEEP" if not response_text.upper().startswith("EVICT") else "EVICT"
             
@@ -738,7 +738,7 @@ def main():
                     )
 
                     # Invoke Gemma 9B for Vote
-                    output = llm_9b(prompt, max_tokens=150, stop=["<end_of_turn>"], temperature=0.0)
+                    output = llm_9b(prompt, max_tokens=150, stop=["<|im_end|>"], temperature=0.0)
                     response_text = output['choices'][0]['text'].strip()
                     vote = "ATTACH" if response_text.upper().startswith("ATTACH") else "REJECT"
 
@@ -827,7 +827,7 @@ def main():
                             all_ms = [reph_title]
                         
                         title_prompt = title_prompt_template.format(milestones="\n".join(f"- {m}" for m in all_ms))
-                        title_out = llm_9b(title_prompt, max_tokens=60, stop=["<end_of_turn>"], temperature=0.0)
+                        title_out = llm_9b(title_prompt, max_tokens=60, stop=["<|im_end|>"], temperature=0.0)
                         gen_title = title_out['choices'][0]['text'].strip().strip('"').strip("'")
                         
                         # Validate title length
