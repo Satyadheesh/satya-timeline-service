@@ -1,72 +1,39 @@
-name: Satya Timeline Service
+name: Satya Timeline Eval
 
 on:
-  repository_dispatch:
-    types: [trigger-timeline]
-  # schedule: # TODO: re-enable before replay
-  #   - cron: '30 */6 * * *'
   workflow_dispatch:
     inputs:
-      # --- PIPELINE (normal production run) ---
-      dry_run:
-        description: 'Pipeline: dry-run only — no DB writes, no LLM calls'
-        required: false
-        type: boolean
-        default: false
-      from_id:
-        description: 'Pipeline: force-start from this article ID (BLANK = normal, resumes from DB checkpoint automatically)'
-        required: false
-        type: string
-        default: ''
-      limit:
-        description: 'Pipeline: max articles to process this run (0 = default batch size of 25)'
-        required: false
-        type: string
-        default: '0'
-      run_tests:
-        description: 'Pipeline: run unit test suite before processing'
-        required: false
-        type: boolean
-        default: false
-      audit_event_id:
-        description: 'Pipeline: audit ONE event ID only (prints KEEP/EVICT, no DB writes) — blank = normal run'
-        required: false
-        type: string
-        default: ''
-      # --- EVALUATION (accuracy harness, not the real pipeline) ---
-      run_eval:
-        description: 'Eval: run the accuracy eval harness INSTEAD of the pipeline'
-        required: false
-        type: boolean
-        default: false
       eval_start_index:
-        description: 'Eval: case index to resume from (0 = fresh run, start at the beginning)'
+        description: 'Case index to resume from (0 = fresh run) — sequential mode only, ignored if parallel'
         required: false
         type: string
         default: '0'
       eval_limit:
-        description: 'Eval: cases to process this run (BLANK = all remaining, do not set to 0)'
+        description: 'Cases to process this run (BLANK = all remaining, do not set to 0) — sequential mode only'
         required: false
         type: string
         default: ''
       eval_parallel:
-        description: 'Eval: split across 20 parallel shards instead of one sequential run'
+        description: 'Split across 20 parallel shards instead of one sequential run'
         required: false
         type: boolean
         default: false
 
 concurrency:
-  group: satya-timeline-${{ github.event.inputs.audit_event_id || 'main' }}
+  group: satya-eval
   cancel-in-progress: false
 
 jobs:
-  process_timeline:
+  # Sequential mode: one runner works through the case set (optionally
+  # resuming from eval_start_index / limited to eval_limit), auto-looping
+  # by self-dispatching a continuation until every case is recorded.
+  run_eval_sequential:
+    if: ${{ github.event.inputs.eval_parallel != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       contents: write
       actions: write
-      issues: write
 
     steps:
       - name: Checkout Repository
@@ -88,12 +55,6 @@ jobs:
             pip install -r requirements.txt
           fi
 
-      - name: Run Pipeline Unit Tests
-        if: ${{ github.event.inputs.run_tests != 'false' }}
-        run: |
-          python -m unittest test_matching.py
-
-      # --- CACHE GEOMODELS ---
       - name: Cache LLM Models
         id: cache-models
         uses: actions/cache@v4
@@ -102,17 +63,16 @@ jobs:
           key: qwen-14b-local-models-v3-q5km
 
       - name: Download LLM Models
-        if: steps.cache-models.outputs.cache-hit != 'true' && github.event.inputs.dry_run != 'true'
+        if: steps.cache-models.outputs.cache-hit != 'true'
         run: |
           mkdir -p models
           python -c '
           import os, shutil
           from huggingface_hub import hf_hub_download
-          
+
           temp_cache = "./models/.hf_cache"
           os.makedirs(temp_cache, exist_ok=True)
-          
-          # Gemma 2B (for Milestone narration)
+
           model_2b = "./models/gemma-2-2b-it-Q4_K_M.gguf"
           if not os.path.exists(model_2b):
               print("Downloading Gemma 2B...")
@@ -126,8 +86,7 @@ jobs:
               if os.path.exists(temp_cache):
                   shutil.rmtree(temp_cache)
                   os.makedirs(temp_cache, exist_ok=True)
-              
-          # Qwen 14B (for Attach Gate decision, Scope, Saga, Closure & Title creation)
+
           model_qwen = "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
           if not os.path.exists(model_qwen):
               print("Downloading Qwen 14B...")
@@ -143,7 +102,6 @@ jobs:
           '
 
       - name: Run Evaluation Harness
-        if: ${{ github.event.inputs.run_eval == 'true' && github.event.inputs.eval_parallel != 'true' }}
         env:
           MODEL_GATE_PATH: "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
         run: |
@@ -161,7 +119,7 @@ jobs:
       # fsync'd after every case, so whatever completed survives here even
       # if the job never reaches a normal finish.
       - name: Upload eval results (even on timeout/cancel)
-        if: ${{ always() && github.event.inputs.run_eval == 'true' && github.event.inputs.eval_parallel != 'true' }}
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: eval-run-output-${{ github.run_id }}
@@ -173,7 +131,7 @@ jobs:
       # checkout, fresh 360-min budget) can pick up exactly where this one
       # left off. Runs even on timeout/cancel — that's the whole point.
       - name: Checkpoint eval progress to repo
-        if: ${{ always() && github.event.inputs.run_eval == 'true' && github.event.inputs.eval_parallel != 'true' }}
+        if: always()
         run: |
           if [ -f eval/eval_run_output.jsonl ]; then
             git config user.name "github-actions[bot]"
@@ -194,7 +152,7 @@ jobs:
       # resuming from wherever eval_run_output.jsonl left off. Keeps firing
       # new 360-min-budget runs until every case is recorded.
       - name: Continue eval if incomplete
-        if: ${{ always() && github.event.inputs.run_eval == 'true' && github.event.inputs.eval_parallel != 'true' }}
+        if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -209,76 +167,19 @@ jobs:
             curl -X POST \
               -H "Authorization: token $GITHUB_TOKEN" \
               -H "Accept: application/vnd.github.v3+json" \
-              https://api.github.com/repos/${{ github.repository }}/actions/workflows/timeline_service.yml/dispatches \
-              -d "{\"ref\":\"main\",\"inputs\":{\"run_eval\":\"true\",\"run_tests\":\"false\",\"eval_start_index\":\"$DONE\"}}"
+              https://api.github.com/repos/${{ github.repository }}/actions/workflows/timeline_eval.yml/dispatches \
+              -d "{\"ref\":\"main\",\"inputs\":{\"eval_start_index\":\"$DONE\"}}"
           else
             echo "Eval complete — all $TOTAL cases recorded, no further chunks needed."
           fi
 
-      - name: Run Timeline Pipeline
-        if: ${{ github.event.inputs.run_eval != 'true' }}
-        id: run-pipeline
-        env:
-          SATYA_DB_URL: ${{ secrets.SATYA_DB_URL }}
-          SATYA_DB_TOKEN: ${{ secrets.SATYA_DB_TOKEN }}
-          MODEL_2B_PATH: "./models/gemma-2-2b-it-Q4_K_M.gguf"
-          MODEL_GATE_PATH: "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
-        run: |
-          ARGS=""
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            ARGS="$ARGS --dry-run"
-          fi
-          if [ -n "${{ github.event.inputs.from_id }}" ]; then
-            ARGS="$ARGS --from-id ${{ github.event.inputs.from_id }}"
-          fi
-          if [ -n "${{ github.event.inputs.limit }}" ]; then
-            ARGS="$ARGS --limit ${{ github.event.inputs.limit }}"
-          fi
-          if [ -n "${{ github.event.inputs.audit_event_id }}" ]; then
-            ARGS="$ARGS --audit-event ${{ github.event.inputs.audit_event_id }}"
-          fi
-          
-          # Execute pipeline and capture outputs
-          python timeline_pipeline.py $ARGS | tee pipeline.log
-          
-          # Extract variables and write to $GITHUB_OUTPUT
-          HAS_MORE=$(grep "has_more=" pipeline.log | cut -d= -f2 || echo "false")
-          ART_ATTACHED=$(grep "articles_attached=" pipeline.log | cut -d= -f2 || echo "0")
-          
-          echo "has_more=$HAS_MORE" >> $GITHUB_OUTPUT
-          echo "articles_attached=$ART_ATTACHED" >> $GITHUB_OUTPUT
-          
-          echo "GHA OUTPUT - has_more: $HAS_MORE, articles_attached: $ART_ATTACHED"
- 
-      - name: Trigger next Timeline run if remaining
-        if: steps.run-pipeline.outputs.has_more == 'true' && github.event.inputs.dry_run != 'true' && github.event.inputs.run_eval != 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "More articles remain. Triggering next Timeline Service run..."
-          curl -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/timeline_service.yml/dispatches \
-            -d '{"ref":"main"}'
-
-      # Failure Alert: Creates a GitHub Issue if the run crashes
-      - name: Report Pipeline Failure
-        if: failure()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh issue create \
-            --title "Timeline Pipeline Failure — Run #${{ github.run_number }}" \
-            --body "The timeline pipeline run failed. Please review the action run logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-  # Parallel eval mode: 20 shards on 20 separate runners, each covering
-  # ~1/20th the case set (~7-8 cases), each with its own full 360-min budget.
-  # Cuts wall-clock down to roughly the slowest single shard vs the sequential
+  # Parallel mode: 20 shards on 20 separate runners, each covering ~1/20th
+  # the case set (~7-8 cases), each with its own full 360-min budget. Cuts
+  # wall-clock down to roughly the slowest single shard vs the sequential
   # auto-loop above — doesn't speed up any single LLM call, just runs many
   # independent slices at the same time.
   run_eval_parallel:
-    if: ${{ github.event.inputs.run_eval == 'true' && github.event.inputs.eval_parallel == 'true' }}
+    if: ${{ github.event.inputs.eval_parallel == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -392,7 +293,7 @@ jobs:
   # completed, and it clearly says INCOMPLETE if any shard didn't finish.
   merge_eval_shards:
     needs: run_eval_parallel
-    if: ${{ always() && github.event.inputs.run_eval == 'true' && github.event.inputs.eval_parallel == 'true' }}
+    if: ${{ always() && github.event.inputs.eval_parallel == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
