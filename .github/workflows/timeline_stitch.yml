@@ -1,0 +1,146 @@
+name: Timeline Replay 3 — Stitch and Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Merge + saga pass only — NO Turso upload'
+        required: false
+        type: boolean
+        default: false
+      num_shards:
+        description: 'Number of shards (must match the export)'
+        required: false
+        default: '20'
+      max_saga_checks:
+        description: 'Cap on cross-shard saga LLM checks'
+        required: false
+        default: '4000'
+
+concurrency:
+  group: timeline-stitch
+  cancel-in-progress: false
+
+jobs:
+  stitch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install huggingface_hub
+          pip install -r requirements.txt
+
+      - name: Cache LLM Models
+        id: cache-models
+        uses: actions/cache@v4
+        with:
+          path: ./models
+          key: qwen-14b-local-models-v3-q5km
+
+      - name: Download LLM Models
+        if: steps.cache-models.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p models
+          python -c '
+          import os, shutil
+          from huggingface_hub import hf_hub_download
+
+          temp_cache = "./models/.hf_cache"
+          os.makedirs(temp_cache, exist_ok=True)
+
+          model_qwen = "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
+          if not os.path.exists(model_qwen):
+              print("Downloading Qwen 14B...")
+              hf_hub_download(
+                  repo_id="bartowski/Qwen2.5-14B-Instruct-GGUF",
+                  filename="Qwen2.5-14B-Instruct-Q5_K_M.gguf",
+                  local_dir="./models",
+                  local_dir_use_symlinks=False,
+                  cache_dir=temp_cache
+              )
+              if os.path.exists(temp_cache):
+                  shutil.rmtree(temp_cache)
+          '
+
+      - name: Download snapshot artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ART_ID=$(gh api "/repos/${{ github.repository }}/actions/artifacts?name=timeline-snapshot&per_page=10" \
+            --jq '[.artifacts[] | select(.expired == false)][0].id')
+          if [ -z "$ART_ID" ] || [ "$ART_ID" = "null" ]; then
+            echo "No timeline-snapshot artifact found."
+            exit 1
+          fi
+          gh api "/repos/${{ github.repository }}/actions/artifacts/${ART_ID}/zip" > snapshot.zip
+          unzip -o snapshot.zip
+          rm snapshot.zip
+
+      - name: Download all shard artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          N="${{ github.event.inputs.num_shards }}"
+          for i in $(seq 0 $((N - 1))); do
+            ART_ID=$(gh api "/repos/${{ github.repository }}/actions/artifacts?name=timeline-shard-$i&per_page=10" \
+              --jq '[.artifacts[] | select(.expired == false)][0].id')
+            if [ -z "$ART_ID" ] || [ "$ART_ID" = "null" ]; then
+              echo "HARD GATE: missing artifact timeline-shard-$i — all shards must be sealed first."
+              exit 1
+            fi
+            gh api "/repos/${{ github.repository }}/actions/artifacts/${ART_ID}/zip" > s.zip
+            unzip -o s.zip
+            rm s.zip
+          done
+          ls -la shard_*.db
+
+      - name: Run stitch and upload
+        env:
+          SATYA_DB_URL: ${{ secrets.SATYA_DB_URL }}
+          SATYA_DB_TOKEN: ${{ secrets.SATYA_DB_TOKEN }}
+          MODEL_GATE_PATH: "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
+        run: |
+          set -euo pipefail
+          ARGS="--num-shards ${{ github.event.inputs.num_shards }} --max-saga-checks ${{ github.event.inputs.max_saga_checks }}"
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          python stitch_and_upload.py $ARGS
+
+      - name: Upload merged DB artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: timeline-merged
+          path: merged.db
+          retention-days: 90
+          overwrite: true
+
+      - name: Report Stitch Failure
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Timeline Stitch Failure — Run #${{ github.run_number }}" \
+            --body "The stitch/upload run failed. Turso may be partially written — do NOT re-enable the daily cron until this is resolved. Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

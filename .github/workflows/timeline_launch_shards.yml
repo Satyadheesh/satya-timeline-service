@@ -1,0 +1,29 @@
+name: Timeline Replay 2b — Launch All Shards
+
+on:
+  workflow_dispatch:
+    inputs:
+      num_shards:
+        description: 'Number of shards to launch (must match the export)'
+        required: false
+        default: '20'
+
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: write
+    steps:
+      - name: Dispatch all shard runners
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          N="${{ github.event.inputs.num_shards }}"
+          for i in $(seq 0 $((N - 1))); do
+            gh workflow run timeline_shard.yml --repo "${{ github.repository }}" -f shard_id="$i"
+            echo "Dispatched shard $i"
+            sleep 3
+          done
+          echo "All $N shards dispatched. Watch them in the Actions tab."

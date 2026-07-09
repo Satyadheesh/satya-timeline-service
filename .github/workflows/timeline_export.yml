@@ -1,0 +1,51 @@
+name: Timeline Replay 1 — Export Snapshot
+
+on:
+  workflow_dispatch:
+    inputs:
+      num_shards:
+        description: 'Number of shard windows'
+        required: false
+        default: '20'
+
+concurrency:
+  group: timeline-export
+  cancel-in-progress: false
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install libsql numpy
+
+      - name: Export snapshot from Turso
+        env:
+          SATYA_DB_URL: ${{ secrets.SATYA_DB_URL }}
+          SATYA_DB_TOKEN: ${{ secrets.SATYA_DB_TOKEN }}
+        run: |
+          python export_snapshot.py --shards "${{ github.event.inputs.num_shards }}"
+          echo "=== shards.json (paste this for review before launching shards) ==="
+          cat shards.json
+
+      - name: Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: timeline-snapshot
+          path: |
+            snapshot.db
+            shards.json
+          retention-days: 90

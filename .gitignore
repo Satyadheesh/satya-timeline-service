@@ -2,3 +2,11 @@ __pycache__/
 *.pyc
 models/
 .env
+venv/
+snapshot.db
+shards.json
+shard_*.db
+merged.db
+run_out.log
+pipeline.log
+*.zip

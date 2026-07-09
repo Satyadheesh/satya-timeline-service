@@ -1,0 +1,173 @@
+name: Timeline Replay 2 — Shard Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      shard_id:
+        description: 'Shard index (0-based)'
+        required: true
+
+concurrency:
+  group: timeline-shard-${{ github.event.inputs.shard_id }}
+  cancel-in-progress: false
+
+jobs:
+  run_shard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+      actions: write
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install huggingface_hub
+          pip install -r requirements.txt
+
+      - name: Cache LLM Models
+        id: cache-models
+        uses: actions/cache@v4
+        with:
+          path: ./models
+          key: qwen-14b-local-models-v3-q5km
+
+      - name: Download LLM Models
+        if: steps.cache-models.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p models
+          python -c '
+          import os, shutil
+          from huggingface_hub import hf_hub_download
+
+          temp_cache = "./models/.hf_cache"
+          os.makedirs(temp_cache, exist_ok=True)
+
+          # Gemma 2B (for Milestone narration)
+          model_2b = "./models/gemma-2-2b-it-Q4_K_M.gguf"
+          if not os.path.exists(model_2b):
+              print("Downloading Gemma 2B...")
+              hf_hub_download(
+                  repo_id="bartowski/gemma-2-2b-it-GGUF",
+                  filename="gemma-2-2b-it-Q4_K_M.gguf",
+                  local_dir="./models",
+                  local_dir_use_symlinks=False,
+                  cache_dir=temp_cache
+              )
+              if os.path.exists(temp_cache):
+                  shutil.rmtree(temp_cache)
+                  os.makedirs(temp_cache, exist_ok=True)
+
+          # Qwen 14B (for Attach Gate decision, Scope, Saga, Closure & Title creation)
+          model_qwen = "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
+          if not os.path.exists(model_qwen):
+              print("Downloading Qwen 14B...")
+              hf_hub_download(
+                  repo_id="bartowski/Qwen2.5-14B-Instruct-GGUF",
+                  filename="Qwen2.5-14B-Instruct-Q5_K_M.gguf",
+                  local_dir="./models",
+                  local_dir_use_symlinks=False,
+                  cache_dir=temp_cache
+              )
+              if os.path.exists(temp_cache):
+                  shutil.rmtree(temp_cache)
+          '
+
+      - name: Download snapshot artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ART_ID=$(gh api "/repos/${{ github.repository }}/actions/artifacts?name=timeline-snapshot&per_page=10" \
+            --jq '[.artifacts[] | select(.expired == false)][0].id')
+          if [ -z "$ART_ID" ] || [ "$ART_ID" = "null" ]; then
+            echo "No timeline-snapshot artifact found. Run 'Timeline Replay 1 — Export Snapshot' first."
+            exit 1
+          fi
+          gh api "/repos/${{ github.repository }}/actions/artifacts/${ART_ID}/zip" > snapshot.zip
+          unzip -o snapshot.zip
+          rm snapshot.zip
+          ls -la snapshot.db shards.json
+
+      - name: Download shard state (resume if exists)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          ART_ID=$(gh api "/repos/${{ github.repository }}/actions/artifacts?name=timeline-shard-${{ github.event.inputs.shard_id }}&per_page=10" \
+            --jq '[.artifacts[] | select(.expired == false)][0].id' 2>/dev/null || echo "")
+          if [ -n "$ART_ID" ] && [ "$ART_ID" != "null" ]; then
+            gh api "/repos/${{ github.repository }}/actions/artifacts/${ART_ID}/zip" > shard_state.zip
+            unzip -o shard_state.zip
+            rm shard_state.zip
+            echo "Resuming shard ${{ github.event.inputs.shard_id }} from previous state."
+          else
+            echo "Fresh start for shard ${{ github.event.inputs.shard_id }}."
+          fi
+
+      # NOTE: no Turso secrets here, ON PURPOSE — a shard run must never be
+      # able to touch the remote DB. All I/O is the local snapshot + shard DB.
+      - name: Run shard pipeline loop
+        id: run-shard
+        env:
+          MODEL_2B_PATH: "./models/gemma-2-2b-it-Q4_K_M.gguf"
+          MODEL_GATE_PATH: "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
+        run: |
+          set -euo pipefail
+          DEADLINE=$(( $(date +%s) + 17100 ))   # 4h45m — leaves margin for upload + re-dispatch
+          SHARD_DONE=false
+          while true; do
+            python timeline_pipeline.py --shard "${{ github.event.inputs.shard_id }}" --deadline-ts "$DEADLINE" | tee run_out.log
+            if grep -q '^shard_done=true' run_out.log; then
+              SHARD_DONE=true
+              break
+            fi
+            if [ "$(date +%s)" -ge "$DEADLINE" ]; then
+              echo "Deadline reached — handing over to next self-dispatched run."
+              break
+            fi
+          done
+          echo "shard_done=$SHARD_DONE" >> $GITHUB_OUTPUT
+
+      - name: Upload shard state
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: timeline-shard-${{ github.event.inputs.shard_id }}
+          path: shard_${{ github.event.inputs.shard_id }}.db
+          retention-days: 90
+          overwrite: true
+
+      - name: Re-dispatch shard (not finished yet)
+        if: steps.run-shard.outputs.shard_done != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Shard not finished. Triggering next run..."
+          curl -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/timeline_shard.yml/dispatches \
+            -d '{"ref":"main","inputs":{"shard_id":"${{ github.event.inputs.shard_id }}"}}'
+
+      - name: Report Shard Failure
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Timeline Shard ${{ github.event.inputs.shard_id }} Failure — Run #${{ github.run_number }}" \
+            --body "Shard ${{ github.event.inputs.shard_id }} failed. State artifact was still uploaded (if the DB existed). Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

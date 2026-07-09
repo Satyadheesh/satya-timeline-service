@@ -36,7 +36,69 @@ if not os.path.exists(os.path.dirname(default_db_path)):
 
 DB_PATH = os.environ.get('SATYA_DB_PATH', default_db_path)
 
+# --- Shard-replay globals (empty / 0 = normal mode) ---
+SHARD_CTX = {}
+DEADLINE_TS = 0
+
+# Article eligibility filter — single source of truth (export_snapshot.py imports this).
+ELIGIBILITY_SQL = """a.status IN ('classified','entity_processed','processed')
+              AND (a.category != 'international'
+                   OR a.party_mentioned NOT IN ('[]','')
+                   OR a.ministers_mentioned NOT IN ('[]','')
+                   OR a.states_mentioned NOT IN ('[]','')
+                   OR a.cities_mentioned NOT IN ('[]',''))
+              AND (a.ministers_mentioned != '[]' OR a.party_mentioned != '[]' OR a.civic_flag = 1)"""
+
+# Local schema for a shard's own event DB (mirrors production tables, plus
+# last_scraped_at on the checkpoint because shards process in (scraped_at, id)
+# order, and shard_meta for the done flag).
+SHARD_SCHEMA = """
+CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    slug TEXT,
+    entity_keys TEXT,
+    centroid BLOB,
+    first_seen INTEGER,
+    last_seen INTEGER,
+    article_count INTEGER,
+    state TEXT,
+    scope TEXT,
+    saga_id INTEGER
+);
+CREATE TABLE IF NOT EXISTS event_articles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id INTEGER,
+    article_id INTEGER,
+    milestone TEXT,
+    event_date INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_ea_event ON event_articles(event_id);
+CREATE INDEX IF NOT EXISTS idx_ea_article ON event_articles(article_id);
+CREATE TABLE IF NOT EXISTS timeline_checkpoint (
+    id INTEGER PRIMARY KEY,
+    last_article_id INTEGER,
+    last_scraped_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS shard_meta (
+    id INTEGER PRIMARY KEY,
+    shard_done INTEGER DEFAULT 0
+);
+"""
+
 def get_db_connection():
+    # Shard-replay mode: everything is local. The shard's own event DB is the
+    # main database; the read-only articles snapshot is ATTACHed as 'snap'.
+    # Unqualified 'articles' references resolve to snap.articles because main
+    # has no articles table. Turso is NEVER touched in this mode.
+    if SHARD_CTX:
+        conn = sqlite3.connect(SHARD_CTX['shard_db'])
+        conn.executescript(SHARD_SCHEMA)
+        conn.commit()
+        conn.execute("ATTACH DATABASE ? AS snap", (SHARD_CTX['snapshot_db'],))
+        logging.info(f"[SHARD {SHARD_CTX['shard']}] Local shard DB: {SHARD_CTX['shard_db']} | snapshot attached: {SHARD_CTX['snapshot_db']}")
+        return conn
+
     db_url = os.environ.get('SATYA_DB_URL')
     db_token = os.environ.get('SATYA_DB_TOKEN')
     
@@ -414,8 +476,8 @@ def do_attach_write(cursor, matched_event_id, art_id, milestone, scraped_at, new
     
     for other_id in linked_saga_event_ids:
         assign_saga_id(cursor, matched_event_id, other_id)
-        
-    cursor.execute("INSERT OR REPLACE INTO timeline_checkpoint (id, last_article_id) VALUES (1, ?)", (art_id,))
+
+    do_checkpoint_write(cursor, art_id, scraped_at)
 
 def do_create_write(cursor, art_id, art_entities, embedding, scraped_at, scope):
     cursor.execute("""
@@ -439,11 +501,50 @@ def do_create_write(cursor, art_id, art_entities, embedding, scraped_at, scope):
         VALUES (?, ?, ?, ?)
     """, (new_ev_id, art_id, None, scraped_at))
     
-    cursor.execute("INSERT OR REPLACE INTO timeline_checkpoint (id, last_article_id) VALUES (1, ?)", (art_id,))
+    do_checkpoint_write(cursor, art_id, scraped_at)
     return new_ev_id
 
-def do_checkpoint_write(cursor, art_id):
-    cursor.execute("INSERT OR REPLACE INTO timeline_checkpoint (id, last_article_id) VALUES (1, ?)", (art_id,))
+def do_checkpoint_write(cursor, art_id, scraped_at=0):
+    if SHARD_CTX:
+        # Shards process in (scraped_at, id) order, so the cursor is the pair.
+        cursor.execute("INSERT OR REPLACE INTO timeline_checkpoint (id, last_article_id, last_scraped_at) VALUES (1, ?, ?)", (art_id, scraped_at))
+    else:
+        cursor.execute("INSERT OR REPLACE INTO timeline_checkpoint (id, last_article_id) VALUES (1, ?)", (art_id,))
+
+def run_final_seal(conn, encoder, llm_9b, closure_audit_prompt_template, saga_check_prompt_template):
+    """Shard mode only: the shard's window is exhausted — run the full closure
+    ceremony (exit audit + saga check) on EVERY remaining open event and close
+    it. Deadline-aware and resumable: each closure commits individually, so an
+    interrupted seal simply continues on the next run."""
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM events WHERE state = 'open' ORDER BY id ASC")
+    open_ids = [r[0] for r in cursor.fetchall()]
+    logging.info(f"[FINAL SEAL] {len(open_ids)} open events to close at end of shard window.")
+    sealed_all = True
+    for ev_id in open_ids:
+        if DEADLINE_TS and time.time() >= DEADLINE_TS:
+            logging.info("[FINAL SEAL] Deadline reached — sealing resumes on next run.")
+            sealed_all = False
+            break
+        try:
+            cursor = conn.cursor()
+            evicted_ids, linked_ids = get_closure_decisions(
+                cursor, llm_9b, ev_id,
+                closure_audit_prompt_template, saga_check_prompt_template
+            )
+            conn, _ = run_write_burst_with_reconnect(
+                conn,
+                do_closure_write,
+                encoder,
+                ev_id,
+                evicted_ids,
+                linked_ids
+            )
+            logging.info(f"[FINAL SEAL] Event {ev_id} closed.")
+        except Exception as e:
+            logging.error(f"[FINAL SEAL] Failed closing event {ev_id}: {e}")
+            sealed_all = False
+    return conn, sealed_all
 
 def main():
     parser = argparse.ArgumentParser(description="Satya Timeline Service Pipeline")
@@ -453,7 +554,43 @@ def main():
     parser.add_argument('--batch-size', type=int, default=25, help="Number of articles to process in this batch")
     parser.add_argument('--sim-threshold', type=float, default=0.60, help="Cosine similarity threshold for matches")
     parser.add_argument('--audit-event', type=int, help="Run closure audit calibration on a single event ID, printing KEEP/EVICT and exit without modifying database")
+    parser.add_argument('--shard', type=int, help="Shard-replay mode: process only this shard's (scraped_at, id) window from the local snapshot, writing to a local shard DB. Zero Turso traffic.")
+    parser.add_argument('--snapshot', type=str, default='./snapshot.db', help="Path to the local articles snapshot DB (shard mode)")
+    parser.add_argument('--shards-config', type=str, default='./shards.json', help="Path to shards.json produced by export_snapshot.py (shard mode)")
+    parser.add_argument('--deadline-ts', type=int, default=0, help="Unix timestamp; stop cleanly (between articles/closures) once passed. 0 = no deadline")
     args = parser.parse_args()
+
+    global DEADLINE_TS
+    DEADLINE_TS = args.deadline_ts or 0
+
+    if args.shard is not None:
+        if args.from_id is not None:
+            logging.critical("--from-id is not supported in shard mode.")
+            sys.exit(1)
+        if args.audit_event is not None:
+            logging.critical("--audit-event is not supported in shard mode.")
+            sys.exit(1)
+        if not os.path.exists(args.shards_config):
+            logging.critical(f"Shards config not found: {args.shards_config}")
+            sys.exit(1)
+        if not os.path.exists(args.snapshot):
+            logging.critical(f"Snapshot DB not found: {args.snapshot}")
+            sys.exit(1)
+        with open(args.shards_config, 'r') as f:
+            shards_cfg = json.load(f)
+        matching = [s for s in shards_cfg.get('shards', []) if s.get('shard') == args.shard]
+        if not matching:
+            logging.critical(f"Shard {args.shard} not found in {args.shards_config}")
+            sys.exit(1)
+        w = matching[0]
+        SHARD_CTX.update({
+            'shard': args.shard,
+            'shard_db': f"./shard_{args.shard}.db",
+            'snapshot_db': args.snapshot,
+            'from_ts': int(w['from_ts']), 'from_id': int(w['from_id']),
+            'to_ts': int(w['to_ts']), 'to_id': int(w['to_id']),
+        })
+        logging.info(f"[SHARD {args.shard}] Window: ({w['from_ts']}, id {w['from_id']}) .. ({w['to_ts']}, id {w['to_id']}) exclusive | count={w.get('count')}")
 
     # Environment variables override BATCH_SIZE
     env_batch_size = os.environ.get('BATCH_SIZE')
@@ -470,6 +607,21 @@ def main():
     except Exception as e:
         logging.critical(f"Database connection failed: {e}")
         sys.exit(1)
+
+    # Shard already sealed? (idempotent re-dispatch safety)
+    if SHARD_CTX:
+        try:
+            cursor.execute("SELECT shard_done FROM shard_meta WHERE id = 1")
+            row = cursor.fetchone()
+            if row and int(row[0] or 0) == 1:
+                logging.info(f"[SHARD {SHARD_CTX['shard']}] Already sealed — nothing to do.")
+                print("has_more=false")
+                print("articles_attached=0")
+                print("shard_done=true")
+                conn.close()
+                sys.exit(0)
+        except Exception as e:
+            logging.error(f"Failed to read shard_meta: {e}")
 
     # 1. Cursor Loading / Audit Event check
     if args.audit_event is not None:
@@ -539,39 +691,65 @@ def main():
         sys.exit(0)
 
     start_id = 0
+    start_sa = 0
     if args.from_id is not None:
         start_id = args.from_id
         logging.info(f"Overriding cursor. Starting from article ID: {start_id}")
     else:
         try:
-            cursor.execute("SELECT last_article_id FROM timeline_checkpoint WHERE id = 1")
-            row = cursor.fetchone()
-            if row:
-                start_id = int(row[0])
-                logging.info(f"Loaded cursor from DB. Last processed article ID: {start_id}")
+            if SHARD_CTX:
+                cursor.execute("SELECT last_article_id, last_scraped_at FROM timeline_checkpoint WHERE id = 1")
+                row = cursor.fetchone()
+                if row:
+                    start_id = int(row[0])
+                    start_sa = int(row[1] or 0)
+                    logging.info(f"[SHARD] Loaded cursor: (scraped_at {start_sa}, id {start_id})")
+                else:
+                    start_id = -1
+                    start_sa = 0
+                    logging.info("[SHARD] Fresh shard — no checkpoint yet.")
             else:
-                logging.info("Checkpoint empty. Starting from article ID 0.")
+                cursor.execute("SELECT last_article_id FROM timeline_checkpoint WHERE id = 1")
+                row = cursor.fetchone()
+                if row:
+                    start_id = int(row[0])
+                    logging.info(f"Loaded cursor from DB. Last processed article ID: {start_id}")
+                else:
+                    logging.info("Checkpoint empty. Starting from article ID 0.")
         except Exception as e:
             logging.error(f"Failed to read checkpoint table: {e}. Starting from ID 0.")
 
     # 2. Fetch Batch
-    logging.info(f"Fetching up to {batch_size} articles after ID {start_id}...")
+    logging.info(f"Fetching up to {batch_size} articles after cursor (id {start_id})...")
     try:
-        cursor.execute("""
-            SELECT a.id, a.title, a.rephrased_title, a.rephrased_article, a.scraped_at,
-                   a.party_mentioned, a.ministers_mentioned, a.states_mentioned, a.cities_mentioned, a.civic_flag
-            FROM articles a
-            WHERE a.id > ?
-              AND a.status IN ('classified','entity_processed','processed')
-              AND (a.category != 'international' 
-                   OR a.party_mentioned NOT IN ('[]','') 
-                   OR a.ministers_mentioned NOT IN ('[]','') 
-                   OR a.states_mentioned NOT IN ('[]','') 
-                   OR a.cities_mentioned NOT IN ('[]',''))
-              AND (a.ministers_mentioned != '[]' OR a.party_mentioned != '[]' OR a.civic_flag = 1)
-            ORDER BY a.id ASC
-            LIMIT ?
-        """, (start_id, batch_size))
+        if SHARD_CTX:
+            # Shard mode: snapshot is pre-filtered for eligibility; process in
+            # strict (scraped_at, id) order within the shard's window.
+            # Condition 1 = cursor (exclusive), 2 = window from (inclusive),
+            # 3 = window to (exclusive).
+            cursor.execute("""
+                SELECT a.id, a.title, a.rephrased_title, a.rephrased_article, a.scraped_at,
+                       a.party_mentioned, a.ministers_mentioned, a.states_mentioned, a.cities_mentioned, a.civic_flag
+                FROM articles a
+                WHERE (a.scraped_at > ? OR (a.scraped_at = ? AND a.id > ?))
+                  AND (a.scraped_at > ? OR (a.scraped_at = ? AND a.id >= ?))
+                  AND (a.scraped_at < ? OR (a.scraped_at = ? AND a.id < ?))
+                ORDER BY a.scraped_at ASC, a.id ASC
+                LIMIT ?
+            """, (start_sa, start_sa, start_id,
+                  SHARD_CTX['from_ts'], SHARD_CTX['from_ts'], SHARD_CTX['from_id'],
+                  SHARD_CTX['to_ts'], SHARD_CTX['to_ts'], SHARD_CTX['to_id'],
+                  batch_size))
+        else:
+            cursor.execute(f"""
+                SELECT a.id, a.title, a.rephrased_title, a.rephrased_article, a.scraped_at,
+                       a.party_mentioned, a.ministers_mentioned, a.states_mentioned, a.cities_mentioned, a.civic_flag
+                FROM articles a
+                WHERE a.id > ?
+                  AND {ELIGIBILITY_SQL}
+                ORDER BY a.id ASC
+                LIMIT ?
+            """, (start_id, batch_size))
         articles_rows = cursor.fetchall()
     except Exception as e:
         logging.critical(f"Failed to fetch articles batch: {e}")
@@ -580,10 +758,14 @@ def main():
 
     if not articles_rows:
         logging.info("No articles to process in this batch.")
-        print("has_more=false")
-        print("articles_attached=0")
-        conn.close()
-        sys.exit(0)
+        if not SHARD_CTX:
+            print("has_more=false")
+            print("articles_attached=0")
+            conn.close()
+            sys.exit(0)
+        # Shard mode: window exhausted, but the final seal may still be
+        # pending — fall through (models load, matching loop no-ops, and the
+        # end-of-window seal below finishes the job).
 
     # 3. Load LLM and Embedding models
     try:
@@ -640,10 +822,14 @@ def main():
 
     attached_count = 0
     last_processed_id = start_id
+    last_processed_sa = start_sa
     max_scraped_at = 0
 
     # 5. Pipeline Matching Loop
     for row in articles_rows:
+        if DEADLINE_TS and time.time() >= DEADLINE_TS:
+            logging.info("Deadline reached — stopping batch early (per-article checkpoints already committed).")
+            break
         art_id = int(row[0])
         orig_title = row[1] or ""
         reph_title = row[2] or orig_title
@@ -651,6 +837,7 @@ def main():
         scraped_at = int(row[4]) if row[4] is not None else 0
         max_scraped_at = max(max_scraped_at, scraped_at)
         last_processed_id = art_id
+        last_processed_sa = scraped_at
 
         # Parse entities
         art_entities = extract_keys(row[5], row[6], row[7], row[8])
@@ -947,7 +1134,8 @@ def main():
                     conn, _ = run_write_burst_with_reconnect(
                         conn,
                         do_checkpoint_write,
-                        art_id
+                        art_id,
+                        scraped_at
                     )
                     cursor = conn.cursor()
                 except Exception as commit_err:
@@ -986,6 +1174,9 @@ def main():
             if events_to_close:
                 logging.info(f"Found {len(events_to_close)} events to close.")
                 for ev_id in events_to_close:
+                    if DEADLINE_TS and time.time() >= DEADLINE_TS:
+                        logging.info("Deadline reached — remaining closures resume on next run.")
+                        break
                     logging.info(f"Closing Event ID {ev_id}...")
                     try:
                         # Refresh cursor for reads
@@ -1017,18 +1208,23 @@ def main():
     for attempt in range(2):
         try:
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT id FROM articles 
-                WHERE id > ?
-                  AND status IN ('classified','entity_processed','processed')
-                  AND (category != 'international' 
-                       OR party_mentioned NOT IN ('[]','') 
-                       OR ministers_mentioned NOT IN ('[]','') 
-                       OR states_mentioned NOT IN ('[]','') 
-                       OR cities_mentioned NOT IN ('[]',''))
-                  AND (ministers_mentioned != '[]' OR party_mentioned != '[]' OR civic_flag = 1)
-                LIMIT 1
-            """, (last_processed_id,))
+            if SHARD_CTX:
+                cursor.execute("""
+                    SELECT a.id FROM articles a
+                    WHERE (a.scraped_at > ? OR (a.scraped_at = ? AND a.id > ?))
+                      AND (a.scraped_at > ? OR (a.scraped_at = ? AND a.id >= ?))
+                      AND (a.scraped_at < ? OR (a.scraped_at = ? AND a.id < ?))
+                    LIMIT 1
+                """, (last_processed_sa, last_processed_sa, last_processed_id,
+                      SHARD_CTX['from_ts'], SHARD_CTX['from_ts'], SHARD_CTX['from_id'],
+                      SHARD_CTX['to_ts'], SHARD_CTX['to_ts'], SHARD_CTX['to_id']))
+            else:
+                cursor.execute(f"""
+                    SELECT a.id FROM articles a
+                    WHERE a.id > ?
+                      AND {ELIGIBILITY_SQL}
+                    LIMIT 1
+                """, (last_processed_id,))
             row = cursor.fetchone()
             if row:
                 has_more = "true"
@@ -1041,6 +1237,21 @@ def main():
                 except Exception:
                     pass
                 conn = get_db_connection()
+
+    # Shard mode: end-of-window final seal — when the window is exhausted,
+    # close ALL remaining open events (full ceremony), then mark the shard done.
+    shard_done = "false"
+    if SHARD_CTX and not args.dry_run and has_more == "false":
+        conn, sealed_all = run_final_seal(
+            conn, encoder, llm_9b,
+            closure_audit_prompt_template, saga_check_prompt_template
+        )
+        if sealed_all:
+            def _mark_shard_done(cur):
+                cur.execute("INSERT OR REPLACE INTO shard_meta (id, shard_done) VALUES (1, 1)")
+            conn, _ = run_write_burst_with_reconnect(conn, _mark_shard_done)
+            shard_done = "true"
+            logging.info(f"[SHARD {SHARD_CTX['shard']}] SEALED — shard complete.")
 
     # Close connection
     try:
@@ -1062,6 +1273,8 @@ def main():
     # Print output to stdout for GHA step capture
     print(f"has_more={has_more}")
     print(f"articles_attached={attached_count}")
+    if SHARD_CTX:
+        print(f"shard_done={shard_done}")
 
 if __name__ == '__main__':
     main()
