@@ -1,10 +1,12 @@
 name: Satya Timeline Pipeline
 
 on:
-  repository_dispatch:
-    types: [trigger-timeline]
-  # schedule: # TODO: re-enable before replay
-  #   - cron: '30 */6 * * *'
+  # Safety-net cron: if the self-redispatch chain ever breaks (transient API
+  # failure, cancelled run), this restarts the loop within 2 hours.
+  # KEEP COMMENTED until the shard replay is stitched (STEP 7) — the forward
+  # loop must not write events while the replay is rebuilding them.
+  # schedule:
+  #   - cron: '15 */2 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -12,35 +14,22 @@ on:
         required: false
         type: boolean
         default: false
-      from_id:
-        description: 'Force-start from this article ID (BLANK = normal, resumes from DB checkpoint automatically)'
-        required: false
-        type: string
-        default: ''
-      limit:
-        description: 'Max articles to process this run (0 = default batch size of 25)'
-        required: false
-        type: string
-        default: '0'
-      run_tests:
-        description: 'Run unit test suite before processing'
+      reset_events:
+        description: 'DANGER: wipe all events + checkpoint and replay EVERY article from ID 0 (full coverage rebuild)'
         required: false
         type: boolean
         default: false
-      audit_event_id:
-        description: 'Audit ONE event ID only (prints KEEP/EVICT, no DB writes) — blank = normal run'
-        required: false
-        type: string
-        default: ''
 
 concurrency:
-  group: satya-pipeline-${{ github.event.inputs.audit_event_id || 'main' }}
+  group: satya-pipeline-main
   cancel-in-progress: false
 
 jobs:
   process_timeline:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    # Small-chunk mode: the pipeline gets a 95-min soft deadline (stops cleanly
+    # between articles); 130 hard timeout covers model download + one slow article.
+    timeout-minutes: 130
     permissions:
       contents: write
       actions: write
@@ -65,11 +54,6 @@ jobs:
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           fi
-
-      - name: Run Pipeline Unit Tests
-        if: ${{ github.event.inputs.run_tests == 'true' }}
-        run: |
-          python -m unittest test_matching.py
 
       # --- CACHE GEOMODELS ---
       - name: Cache LLM Models
@@ -132,15 +116,14 @@ jobs:
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             ARGS="$ARGS --dry-run"
           fi
-          if [ -n "${{ github.event.inputs.from_id }}" ]; then
-            ARGS="$ARGS --from-id ${{ github.event.inputs.from_id }}"
+          if [ "${{ github.event.inputs.reset_events }}" = "true" ]; then
+            ARGS="$ARGS --reset-events"
           fi
-          if [ -n "${{ github.event.inputs.limit }}" ]; then
-            ARGS="$ARGS --limit ${{ github.event.inputs.limit }}"
-          fi
-          if [ -n "${{ github.event.inputs.audit_event_id }}" ]; then
-            ARGS="$ARGS --audit-event ${{ github.event.inputs.audit_event_id }}"
-          fi
+
+          # Soft deadline: stop cleanly 95 min from now; big batch so the
+          # deadline (not the batch size) is what ends the chunk.
+          DEADLINE=$(( $(date +%s) + 95*60 ))
+          ARGS="$ARGS --deadline-ts $DEADLINE --batch-size 200"
 
           # Execute pipeline and capture outputs
           python timeline_pipeline.py $ARGS | tee pipeline.log

@@ -1,0 +1,27 @@
+<|im_start|>user
+You are auditing a news event archive before it is permanently sealed.
+
+An EVENT is one named occurrence or process — a budget, an election, a court
+case, a scheme, a disaster, a controversy — including its reactions, analyses,
+follow-ups and consequences. An event is NOT a topic, a region, a party, or a
+rivalry between people.
+
+EVENT TITLE: {event_title}
+EVENT SCOPE: {scope}
+
+MEMBER ARTICLES ({count} total), one per line as "ID: milestone":
+{member_lines}
+
+Which member articles do NOT fall within the event's scope?
+An article belongs if it is a development, reaction, analysis or consequence
+of the occurrence named in the scope. It does not belong if it is a different
+occurrence, a general roundup, or other actions by the same people or regions.
+If in doubt about an article, evict it.
+
+Briefly reason about any doubtful articles, then give your verdict on the
+FINAL line in exactly this format (IDs copied from the list above):
+EVICT: 12345, 67890
+or, if every article belongs:
+EVICT: NONE
+<|im_end|>
+<|im_start|>assistant

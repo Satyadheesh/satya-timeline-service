@@ -40,6 +40,16 @@ DB_PATH = os.environ.get('SATYA_DB_PATH', default_db_path)
 SHARD_CTX = {}
 DEADLINE_TS = 0
 
+# Hard cap on saga-check LLM calls per event. Articles with ubiquitous entity
+# keys (bjp, nda, big states) can match hundreds of closed events; unbounded,
+# that loop runs for hours (cause of the 2026-07-10 6h-timeout kill).
+MAX_SAGA_LLM_CALLS = 8
+
+class DeadlineReached(Exception):
+    """Raised inside long LLM loops when DEADLINE_TS passes; callers treat the
+    interrupted unit of work as not-done and it is retried on the next run."""
+    pass
+
 # Article eligibility filter — single source of truth (export_snapshot.py imports this).
 ELIGIBILITY_SQL = """a.status IN ('classified','entity_processed','processed')
               AND (a.category != 'international'
@@ -224,6 +234,8 @@ def check_saga_links_in_memory(cursor, llm_9b, event_id, event_title, merged_key
     cursor.execute("SELECT id, title, entity_keys, first_seen, last_seen, saga_id, scope FROM events WHERE state = 'closed'")
     closed_events = cursor.fetchall()
     
+    # Phase 1: collect candidates cheaply (no LLM), strongest overlap first.
+    candidates = []
     for c_id, c_title, c_keys_json, c_first, c_last, c_saga, c_scope in closed_events:
         if c_id == event_id:
             continue
@@ -232,45 +244,59 @@ def check_saga_links_in_memory(cursor, llm_9b, event_id, event_title, merged_key
         # Skip if they already share the same saga_id
         if t_saga is not None and c_saga is not None and t_saga == c_saga:
             continue
-            
+
         c_keys = set(json.loads(c_keys_json))
-        if len(t_keys.intersection(c_keys)) >= 2:
-            c_founding = get_founding_milestone(cursor, c_id)
-            
-            # Determine scopes with fallbacks
-            c_scope_val = c_scope or c_founding
-            t_scope_val = t_scope or t_founding
-            
-            def fmt_date(ts):
-                if not ts: return "N/A"
-                return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
-                
-            if c_first < first_seen:
-                ch_a = {"title": c_title, "scope": c_scope_val, "first": fmt_date(c_first), "last": fmt_date(c_last)}
-                ch_b = {"title": event_title, "scope": t_scope_val, "first": fmt_date(first_seen), "last": fmt_date(last_seen)}
-            else:
-                ch_a = {"title": event_title, "scope": t_scope_val, "first": fmt_date(first_seen), "last": fmt_date(last_seen)}
-                ch_b = {"title": c_title, "scope": c_scope_val, "first": fmt_date(c_first), "last": fmt_date(c_last)}
-                
-            prompt = saga_check_prompt_template.format(
-                a_title=ch_a["title"],
-                a_scope=ch_a["scope"],
-                a_first_seen=ch_a["first"],
-                a_last_seen=ch_a["last"],
-                b_title=ch_b["title"],
-                b_scope=ch_b["scope"],
-                b_first_seen=ch_b["first"],
-                b_last_seen=ch_b["last"]
-            )
-            
-            output = llm_9b(prompt, max_tokens=100, stop=["<|im_end|>"], temperature=0.0)
-            res_text = output['choices'][0]['text'].strip().upper()
-            
-            if res_text.startswith("SAME_SAGA"):
-                logging.info(f"[SAGA LINK MEMORY] Event {event_id} and Event {c_id} linked as SAME_SAGA.")
-                linked_ids.append(c_id)
-                if t_saga is None:
-                    t_saga = c_saga
+        overlap = len(t_keys.intersection(c_keys))
+        if overlap >= 2:
+            candidates.append((overlap, c_last or 0, c_id, c_title, c_first, c_last, c_saga, c_scope))
+
+    # Phase 2: cap LLM calls — highest overlap wins, recency breaks ties.
+    candidates.sort(key=lambda c: (c[0], c[1]), reverse=True)
+    if len(candidates) > MAX_SAGA_LLM_CALLS:
+        logging.info(f"[SAGA CHECK] Event {event_id}: {len(candidates)} candidates share >=2 keys; capped to {MAX_SAGA_LLM_CALLS} strongest.")
+        candidates = candidates[:MAX_SAGA_LLM_CALLS]
+
+    for idx, (overlap, _, c_id, c_title, c_first, c_last, c_saga, c_scope) in enumerate(candidates):
+        if DEADLINE_TS and time.time() >= DEADLINE_TS:
+            logging.info(f"[SAGA CHECK] Event {event_id}: deadline reached after {idx}/{len(candidates)} calls — returning partial links.")
+            break
+        c_founding = get_founding_milestone(cursor, c_id)
+
+        # Determine scopes with fallbacks
+        c_scope_val = c_scope or c_founding
+        t_scope_val = t_scope or t_founding
+
+        def fmt_date(ts):
+            if not ts: return "N/A"
+            return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
+
+        if c_first < first_seen:
+            ch_a = {"title": c_title, "scope": c_scope_val, "first": fmt_date(c_first), "last": fmt_date(c_last)}
+            ch_b = {"title": event_title, "scope": t_scope_val, "first": fmt_date(first_seen), "last": fmt_date(last_seen)}
+        else:
+            ch_a = {"title": event_title, "scope": t_scope_val, "first": fmt_date(first_seen), "last": fmt_date(last_seen)}
+            ch_b = {"title": c_title, "scope": c_scope_val, "first": fmt_date(c_first), "last": fmt_date(c_last)}
+
+        prompt = saga_check_prompt_template.format(
+            a_title=ch_a["title"],
+            a_scope=ch_a["scope"],
+            a_first_seen=ch_a["first"],
+            a_last_seen=ch_a["last"],
+            b_title=ch_b["title"],
+            b_scope=ch_b["scope"],
+            b_first_seen=ch_b["first"],
+            b_last_seen=ch_b["last"]
+        )
+
+        logging.info(f"[SAGA CHECK] Event {event_id} vs closed Event {c_id} ({idx+1}/{len(candidates)}, {overlap} shared keys)...")
+        output = llm_9b(prompt, max_tokens=100, stop=["<|im_end|>"], temperature=0.0)
+        res_text = output['choices'][0]['text'].strip().upper()
+
+        if res_text.startswith("SAME_SAGA"):
+            logging.info(f"[SAGA LINK MEMORY] Event {event_id} and Event {c_id} linked as SAME_SAGA.")
+            linked_ids.append(c_id)
+            if t_saga is None:
+                t_saga = c_saga
     return linked_ids
 
 def evict_article_to_new_event(cursor, encoder, event_id, article_id):
@@ -309,14 +335,39 @@ def evict_article_to_new_event(cursor, encoder, event_id, article_id):
         WHERE event_id = ? AND article_id = ?
     """, (new_ev_id, event_id, article_id))
 
+def parse_evict_line(res_text, valid_ids):
+    """Extract evicted article IDs from the model's 'EVICT: ...' verdict line.
+    Defensive: only IDs actually in valid_ids count; anything malformed or
+    missing means NO evictions (a rare unscrubbed event beats a crashed run)."""
+    try:
+        verdict = None
+        for line in res_text.splitlines():
+            if 'EVICT' in line.upper():
+                verdict = line  # keep last matching line (final answer)
+        if verdict is None:
+            return [], False
+        after = verdict.upper().split('EVICT', 1)[1]
+        if 'NONE' in after:
+            return [], True
+        found = [int(x) for x in re.findall(r'\d+', after)]
+        hallucinated = [x for x in found if x not in valid_ids]
+        if hallucinated:
+            logging.warning(f"[BATCH AUDIT] Model returned unknown article IDs {hallucinated} — ignoring those.")
+        return [x for x in found if x in valid_ids], True
+    except Exception as e:
+        logging.warning(f"[BATCH AUDIT] Failed to parse verdict line: {e}")
+        return [], False
+
+BATCH_AUDIT_CHUNK = 30  # milestones per audit call; big events use several calls
+
 def get_closure_decisions(cursor, llm_9b, event_id, closure_audit_prompt_template, saga_check_prompt_template):
     evicted_article_ids = []
     linked_event_ids = []
-    
+
     # 1. Exit Audit
     cursor.execute("SELECT COUNT(*) FROM event_articles WHERE event_id = ?", (event_id,))
     article_count = cursor.fetchone()[0]
-    
+
     if article_count > 2:
         cursor.execute("SELECT title, first_seen, last_seen, entity_keys, scope FROM events WHERE id = ?", (event_id,))
         ev_row = cursor.fetchone()
@@ -337,25 +388,40 @@ def get_closure_decisions(cursor, llm_9b, event_id, closure_audit_prompt_templat
         """, (event_id,))
         member_articles = cursor.fetchall()
         
+        # Batch audit: judge ALL milestones in one call per chunk of 30,
+        # instead of one 5-minute call per article. Same evidence (title +
+        # milestone lines), two orders of magnitude fewer LLM calls.
+        valid_ids = set()
+        member_lines_all = []
         for art_id, milestone, orig_title, reph_title in member_articles:
             art_milestone = milestone or reph_title or orig_title or "No Title"
-            art_title = reph_title or orig_title or "No Title"
-            
+            valid_ids.add(int(art_id))
+            member_lines_all.append(f"{art_id}: {art_milestone}")
+
+        for i in range(0, len(member_lines_all), BATCH_AUDIT_CHUNK):
+            if DEADLINE_TS and time.time() >= DEADLINE_TS:
+                # Abort the whole ceremony: closing with partial evict decisions
+                # would be wrong. Event stays open and is retried next run.
+                raise DeadlineReached(f"Deadline during closure audit of event {event_id} — will retry next run.")
+            chunk = member_lines_all[i:i + BATCH_AUDIT_CHUNK]
             prompt = closure_audit_prompt_template.format(
                 event_title=event_title,
                 scope=scope_val,
-                article_title=art_title,
-                milestone=art_milestone
+                count=len(chunk),
+                member_lines="\n".join(chunk)
             )
-            
-            output = llm_9b(prompt, max_tokens=100, stop=["<|im_end|>"], temperature=0.0)
-            res_text = output['choices'][0]['text'].strip().upper()
-            
-            if res_text.startswith("EVICT"):
+            logging.info(f"[BATCH AUDIT] Event {event_id}: auditing articles {i+1}-{i+len(chunk)} of {len(member_lines_all)} in one call...")
+            output = llm_9b(prompt, max_tokens=500, stop=["<|im_end|>"], temperature=0.0)
+            res_text = output['choices'][0]['text'].strip()
+
+            chunk_evicted, parsed_ok = parse_evict_line(res_text, valid_ids)
+            if not parsed_ok:
+                logging.warning(f"[BATCH AUDIT] Event {event_id}: no parsable verdict — keeping all articles in this chunk. Raw: {res_text[:200]}")
+            for art_id in chunk_evicted:
                 logging.info(f"[EVICT DECISION] Event {event_id}: Evict Article {art_id}")
                 evicted_article_ids.append(art_id)
-            else:
-                logging.info(f"[KEEP DECISION] Event {event_id}: Keep Article {art_id}")
+            kept = len(chunk) - len(chunk_evicted)
+            logging.info(f"[BATCH AUDIT] Event {event_id}: chunk verdict — keep {kept}, evict {len(chunk_evicted)}.")
     else:
         cursor.execute("SELECT title, first_seen, last_seen, entity_keys FROM events WHERE id = ?", (event_id,))
         ev_row = cursor.fetchone()
@@ -558,6 +624,7 @@ def main():
     parser.add_argument('--snapshot', type=str, default='./snapshot.db', help="Path to the local articles snapshot DB (shard mode)")
     parser.add_argument('--shards-config', type=str, default='./shards.json', help="Path to shards.json produced by export_snapshot.py (shard mode)")
     parser.add_argument('--deadline-ts', type=int, default=0, help="Unix timestamp; stop cleanly (between articles/closures) once passed. 0 = no deadline")
+    parser.add_argument('--reset-events', action='store_true', help="DANGER: wipe events, event_articles and timeline_checkpoint, then replay every article from ID 0. Full coverage rebuild.")
     args = parser.parse_args()
 
     global DEADLINE_TS
@@ -607,6 +674,28 @@ def main():
     except Exception as e:
         logging.critical(f"Database connection failed: {e}")
         sys.exit(1)
+
+    # Full-coverage rebuild: wipe timeline state so replay starts at article 0.
+    if args.reset_events:
+        if SHARD_CTX:
+            logging.critical("--reset-events is not supported in shard mode.")
+            conn.close()
+            sys.exit(1)
+        if args.dry_run:
+            logging.critical("--reset-events with --dry-run makes no sense. Aborting.")
+            conn.close()
+            sys.exit(1)
+        logging.warning("RESET: wiping events, event_articles and timeline_checkpoint...")
+        try:
+            cursor.execute("DELETE FROM event_articles")
+            cursor.execute("DELETE FROM events")
+            cursor.execute("DELETE FROM timeline_checkpoint")
+            conn.commit()
+            logging.warning("RESET complete. Replay starts from article ID 0.")
+        except Exception as e:
+            logging.critical(f"Reset failed: {e}")
+            conn.close()
+            sys.exit(1)
 
     # Shard already sealed? (idempotent re-dispatch safety)
     if SHARD_CTX:
@@ -788,12 +877,86 @@ def main():
             event_scope_prompt_template = read_prompt('event_scope')
             milestone_prompt_template = read_prompt('milestone')
             title_prompt_template = read_prompt('event_title')
-            closure_audit_prompt_template = read_prompt('closure_audit')
+            closure_audit_prompt_template = read_prompt('closure_audit_batch')
             saga_check_prompt_template = read_prompt('saga_check')
         except Exception as e:
             logging.critical(f"Failed to load prompt templates: {e}")
             conn.close()
             sys.exit(1)
+
+    # 4a. HOUSEKEEPING FIRST — close overdue events BEFORE filing new articles.
+    # Closures are a finite queue; the article stream is infinite. Running
+    # filing first starves closures forever during a backlog catch-up.
+    # Logical clock = scraped_at of the bookmark article (last one processed),
+    # since this run's batch hasn't been processed yet.
+    if not args.dry_run:
+        clock_ts = 0
+        if SHARD_CTX:
+            clock_ts = start_sa
+        elif start_id > 0:
+            try:
+                cursor.execute("SELECT scraped_at FROM articles WHERE id = ?", (start_id,))
+                row = cursor.fetchone()
+                clock_ts = int(row[0]) if row and row[0] is not None else 0
+            except Exception as e:
+                logging.error(f"Failed to read bookmark article's scraped_at for logical clock: {e}")
+
+        if clock_ts > 0:
+            closure_cutoff = clock_ts - 21 * 24 * 3600
+            logging.info(f"\nRunning chapter closure sweep relative to logical clock cutoff: {closure_cutoff}...")
+
+            # One-off migration of dormant events to closed state
+            try:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE events SET state = 'closed' WHERE state = 'dormant'")
+                migrated = cursor.rowcount
+                if migrated > 0:
+                    logging.info(f"Migrated {migrated} dormant events to closed state.")
+                conn.commit()
+            except Exception as e:
+                logging.error(f"Failed to migrate dormant events: {e}")
+                try:
+                    conn.rollback()
+                except:
+                    pass
+
+            # Find and close all overdue open events
+            try:
+                cursor = conn.cursor()
+                cursor.execute("SELECT id FROM events WHERE state = 'open' AND first_seen < ?", (closure_cutoff,))
+                events_to_close = [r[0] for r in cursor.fetchall()]
+
+                if events_to_close:
+                    logging.info(f"Found {len(events_to_close)} events to close.")
+                    for ev_id in events_to_close:
+                        if DEADLINE_TS and time.time() >= DEADLINE_TS:
+                            logging.info("Deadline reached — remaining closures resume on next run.")
+                            break
+                        logging.info(f"Closing Event ID {ev_id}...")
+                        try:
+                            # Refresh cursor for reads
+                            cursor = conn.cursor()
+                            # Phase 1: All LLM decisions gathered in memory (no DB writes)
+                            evicted_ids, linked_ids = get_closure_decisions(
+                                cursor, llm_9b, ev_id,
+                                closure_audit_prompt_template, saga_check_prompt_template
+                            )
+
+                            # Phase 2: Apply all changes in one write transaction burst
+                            conn, _ = run_write_burst_with_reconnect(
+                                conn,
+                                do_closure_write,
+                                encoder,
+                                ev_id,
+                                evicted_ids,
+                                linked_ids
+                            )
+                            cursor = conn.cursor()
+                            logging.info(f"Event ID {ev_id} closed successfully.")
+                        except Exception as e:
+                            logging.error(f"Failed to run closure ceremony for Event ID {ev_id}: {e}")
+            except Exception as e:
+                logging.error(f"Failed to query events for closure sweep: {e}")
 
     # 4. Load Open Events into Memory
     open_events = []
@@ -1144,64 +1307,8 @@ def main():
                     sys.exit(1)
             continue
 
-    # 6. Chapter Closure Sweep (Logical Clock)
-    # state='open' AND first_seen < batch_max_scraped_at - 21d -> run CLOSURE CEREMONY -> set state='closed'
-    if not args.dry_run and max_scraped_at > 0:
-        closure_cutoff = max_scraped_at - 21 * 24 * 3600
-        logging.info(f"\nRunning chapter closure sweep relative to logical clock cutoff: {closure_cutoff}...")
-        
-        # 1. One-off migration of dormant events to closed state
-        try:
-            cursor = conn.cursor()
-            cursor.execute("UPDATE events SET state = 'closed' WHERE state = 'dormant'")
-            migrated = cursor.rowcount
-            if migrated > 0:
-                logging.info(f"Migrated {migrated} dormant events to closed state.")
-            conn.commit()
-        except Exception as e:
-            logging.error(f"Failed to migrate dormant events: {e}")
-            try:
-                conn.rollback()
-            except:
-                pass
-                
-        # 2. Find all open events that need to close
-        try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id FROM events WHERE state = 'open' AND first_seen < ?", (closure_cutoff,))
-            events_to_close = [r[0] for r in cursor.fetchall()]
-            
-            if events_to_close:
-                logging.info(f"Found {len(events_to_close)} events to close.")
-                for ev_id in events_to_close:
-                    if DEADLINE_TS and time.time() >= DEADLINE_TS:
-                        logging.info("Deadline reached — remaining closures resume on next run.")
-                        break
-                    logging.info(f"Closing Event ID {ev_id}...")
-                    try:
-                        # Refresh cursor for reads
-                        cursor = conn.cursor()
-                        # Phase 1: All LLM decisions gathered in memory (No database writes during this phase)
-                        evicted_ids, linked_ids = get_closure_decisions(
-                            cursor, llm_9b, ev_id,
-                            closure_audit_prompt_template, saga_check_prompt_template
-                        )
-                        
-                        # Phase 2: Apply all changes in one single write transaction burst
-                        conn, _ = run_write_burst_with_reconnect(
-                            conn,
-                            do_closure_write,
-                            encoder,
-                            ev_id,
-                            evicted_ids,
-                            linked_ids
-                        )
-                        cursor = conn.cursor()
-                        logging.info(f"Event ID {ev_id} closed successfully.")
-                    except Exception as e:
-                        logging.error(f"Failed to run closure ceremony for Event ID {ev_id}: {e}")
-        except Exception as e:
-            logging.error(f"Failed to query events for closure sweep: {e}")
+    # (Chapter closure sweep now runs BEFORE the matching loop — see
+    # "HOUSEKEEPING FIRST" above. Finite work must outrank the infinite stream.)
 
     # Check if there are more articles remaining in the table (with reconnect logic)
     has_more = "false"
