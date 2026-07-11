@@ -169,6 +169,19 @@ jobs:
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/timeline_shard.yml/dispatches \
             -d '{"ref":"main","inputs":{"shard_id":"${{ github.event.inputs.shard_id }}"}}'
 
+      - name: Announce SEAL (creates issue -> email notification)
+        if: steps.run-shard.outputs.shard_done == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "✅ Shard ${{ github.event.inputs.shard_id }} SEALED" \
+            --body "Shard ${{ github.event.inputs.shard_id }} finished its window and sealed all events.
+
+          Next: once the shards you want are sealed, run **Timeline Replay 3 — Stitch and Upload** with those ids in the \`shards\` box (e.g. \`0,1,2\`) for a partial go-live, or leave blank when ALL shards are sealed for the final full stitch.
+
+          Close this issue after stitching."
+
       - name: Report Shard Failure
         if: failure()
         env:
