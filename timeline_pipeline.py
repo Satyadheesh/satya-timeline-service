@@ -1201,8 +1201,9 @@ def main():
                         title_out = llm_9b(title_prompt, max_tokens=60, stop=["<|im_end|>"], temperature=0.0)
                         gen_title = title_out['choices'][0]['text'].strip().strip('"').strip("'")
                         
-                        # Validate title length
-                        if len(gen_title.split()) <= 8:
+                        # Validate title length (12 words: 8 was rejecting good
+                        # titles like "Court Rules Against ED in National Herald Case")
+                        if len(gen_title.split()) <= 12:
                             event_title = gen_title
                             event_slug = slugify(event_title)
                             logging.info(f"  Generated Event Title: '{event_title}' | slug: {event_slug}")

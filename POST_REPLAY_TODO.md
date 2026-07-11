@@ -13,6 +13,8 @@ falls back to founding milestone) but judge less precisely.
 - [ ] Write/run a one-time script: find `events WHERE scope IS NULL`,
       regenerate scope from each event's founding article (first row in
       event_articles), validate with the (now tolerant) normalizer, UPDATE.
+- [ ] Same script: also fill `title IS NULL AND article_count >= 2` events
+      (title generation was rejecting >8-word titles until the 12-word fix).
 - [ ] Needs: Turso creds + Qwen GGUF. ~2 min per event on CPU.
 
 ## 3. Switch on the daily forward loop
