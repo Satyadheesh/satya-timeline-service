@@ -538,9 +538,14 @@ def do_attach_write(cursor, matched_event_id, art_id, milestone, scraped_at, new
         VALUES (?, ?, ?, ?)
     """, (matched_event_id, art_id, milestone, scraped_at))
     
+    # COALESCE: attaches after the title/slug were first set pass None here —
+    # they must never wipe the stored values (the old unconditional write
+    # nulled the slug of every event on its 3rd+ attach, hiding it from the
+    # frontend).
     cursor.execute("""
-        UPDATE events 
-        SET centroid = ?, last_seen = ?, article_count = ?, entity_keys = ?, title = ?, slug = ?
+        UPDATE events
+        SET centroid = ?, last_seen = ?, article_count = ?, entity_keys = ?,
+            title = COALESCE(?, title), slug = COALESCE(?, slug)
         WHERE id = ?
     """, (
         new_centroid.tobytes(),

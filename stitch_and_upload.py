@@ -32,6 +32,7 @@ from timeline_pipeline import (
     get_founding_milestone,
     assign_saga_id,
     run_write_burst_with_reconnect,
+    slugify,
 )
 
 logging.basicConfig(
@@ -132,14 +133,24 @@ def merge_shards(shard_paths, merged_path):
                    article_count, state, scope, saga_id
             FROM events
         """).fetchall()
+        repaired_slugs = 0
         for r in ev_rows:
             new_id = r[0] + offset
             new_saga = (r[10] + offset) if r[10] is not None else None
+            title, slug = r[1], r[2]
+            # Repair pass: sealed shards built before the slug-wipe fix hold
+            # titled events with NULL slugs (3rd+ attach nulled them). The
+            # slug is derived from the title, so rebuild it here.
+            if title and not slug:
+                slug = slugify(title)
+                repaired_slugs += 1
             merged.execute("""
                 INSERT INTO events (id, title, slug, entity_keys, centroid, first_seen,
                                     last_seen, article_count, state, scope, saga_id, shard)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (new_id, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], new_saga, k))
+            """, (new_id, title, slug, r[3], r[4], r[5], r[6], r[7], r[8], r[9], new_saga, k))
+        if repaired_slugs:
+            logging.info(f"Shard {k}: repaired {repaired_slugs} NULL slugs from titles.")
         ea_rows = src.execute("SELECT event_id, article_id, milestone, event_date FROM event_articles").fetchall()
         for r in ea_rows:
             merged.execute(
