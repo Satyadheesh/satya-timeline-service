@@ -59,18 +59,20 @@ jobs:
               """, (like, like))
               ids = [int(r[0]) for r in cur.fetchall()][::-1]
               key = re.sub(r'[^a-z0-9]+', '_', target.lower()).strip('_')
-              extra_args = f"--allow-ineligible --extra-key {key}"
+              # skip-sibling-hunt: the name search itself is the recall
+              # mechanism; per-slice hunts would be redundant and expensive.
+              extra_args = f"--allow-ineligible --extra-key {key} --skip-sibling-hunt"
               print(f"Name mode: '{target}' -> {len(ids)} article(s), entity key '{key}'")
 
           if not ids:
               raise SystemExit(f"No articles found for target: {target}")
 
           n = min(18, len(ids))  # parallelism decided automatically
-          per = math.ceil(len(ids) / n)
           os.makedirs('slices', exist_ok=True)
+          # Round-robin: every slice guaranteed non-empty, chronological within itself
           for i in range(n):
               with open(f'slices/slice_{i}.txt', 'w') as f:
-                  f.write('\n'.join(str(x) for x in ids[i*per:(i+1)*per]))
+                  f.write('\n'.join(str(x) for x in ids[i::n]))
           print(f"{len(ids)} article(s) across {n} runner(s)")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write('slices=' + json.dumps(list(range(n))) + '\n')

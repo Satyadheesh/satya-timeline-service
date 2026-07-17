@@ -159,8 +159,11 @@ def judge(args):
         with open(args.ids_file) as f:
             ids += [int(x) for x in f.read().replace(',', '\n').split() if x.strip()]
     if not ids:
-        logging.critical("No article ids given.")
-        sys.exit(1)
+        # An empty slice is a benign no-op (slicing edge), not a failure.
+        out_path = args.out or f"decisions_{args.tag or 'run'}.jsonl"
+        open(out_path, 'w').close()
+        logging.info("Empty slice — nothing to judge, wrote empty decisions file.")
+        return
 
     conn = get_db_connection()
 
@@ -181,8 +184,19 @@ def judge(args):
     milestone_tmpl = read_prompt('milestone')
     scope_tmpl = read_prompt('event_scope')
 
-    check_siblings = args.check_siblings or len(ids) <= 5
+    check_siblings = (args.check_siblings or len(ids) <= 5) and not args.skip_sibling_hunt
     decisions = []
+
+    def fresh_conn():
+        # Turso drops idle Hrana streams while Qwen thinks for minutes; a fresh
+        # connection per article makes every read survive long LLM gaps.
+        nonlocal conn
+        try:
+            conn.close()
+        except Exception:
+            pass
+        conn = get_db_connection()
+        return conn
 
     rows = fetch_articles(conn, ids)
     found_ids = {int(r[0]) for r in rows}
@@ -195,6 +209,7 @@ def judge(args):
                               'reason': 'judge time budget reached — remaining articles deferred to the self-dispatched continuation run'})
             logging.info("Time budget reached — stopping cleanly; continuation run will pick up the rest.")
             break
+        conn = fresh_conn()
         art_id = int(r[0])
         title = r[2] or r[1] or ''
         summary = decompress_text(r[3])
@@ -545,6 +560,8 @@ def main():
     p.add_argument('--extra-key', type=str, default='',
                    help="Entity key to add to all articles/events in this run (e.g. sonam_wangchuk)")
     p.add_argument('--check-siblings', action='store_true')
+    p.add_argument('--skip-sibling-hunt', action='store_true',
+                   help="Name-mode: search already provides recall; per-slice hunts are redundant")
     p.add_argument('--tag', type=str, default='')
     p.add_argument('--out', type=str, default='')
     p.add_argument('--decisions-dir', type=str, default='./decisions')
