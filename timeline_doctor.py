@@ -23,6 +23,7 @@ Two-phase design so many runners can think in parallel while exactly one writes:
 import os
 import sys
 import json
+import re
 import base64
 import glob
 import time
@@ -48,6 +49,30 @@ from timeline_pipeline import (
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 SIM_THRESHOLD = 0.60
+ALIAS_MIN_CONFIRMATIONS = 3
+# Surnames too common to ever be safe standalone aliases
+COMMON_SURNAMES = {'singh', 'kumar', 'sharma', 'yadav', 'khan', 'patel', 'reddy',
+                   'gandhi', 'shah', 'rao', 'das', 'devi', 'verma', 'gupta',
+                   'joshi', 'mishra', 'pandey', 'nair', 'menon', 'iyer'}
+
+def alias_evidence(extra_key, art_id, title):
+    """Name-mode alias mining. If Qwen attached this article to the story but
+    its HEADLINE lacks the full name, whatever name-token the headline uses
+    standalone is gate-certified alias usage. Restricted to the SURNAME (last
+    token), length >=5, not a common surname — the safe pattern for news."""
+    if not extra_key:
+        return None
+    full = extra_key.replace('_', ' ').strip()
+    low = (title or '').lower()
+    if not full or full in low:
+        return None
+    surname = full.split()[-1]
+    if len(surname) < 5 or surname in COMMON_SURNAMES:
+        return None
+    if re.search(r'\b' + re.escape(surname) + r'\b', low):
+        return {'article_id': art_id, 'action': 'alias_evidence',
+                'alias': surname.title(), 'reason': f"headline uses '{surname}' standalone for {full}"}
+    return None
 JUDGE_BUDGET_S = 300 * 60  # stop judging cleanly at 5h (job limit 350m); the
                            # workflow re-dispatches itself to continue, and
                            # already-filed articles are excluded, so chunked
@@ -236,6 +261,9 @@ def judge(args):
             logging.info(f"  -> already in event {ev_id} '{ev_title}' ({ev_count} articles, {ev_state})")
             decisions.append({'article_id': art_id, 'action': 'report',
                               'reason': f"already in event {ev_id} '{ev_title}' ({ev_count} articles, {ev_state})"})
+            evd = alias_evidence(args.extra_key, art_id, title)
+            if evd:
+                decisions.append(evd)
             if check_siblings:
                 decisions += hunt_siblings(conn, encoder, llm_9b, llm_2b, gate_tmpl, milestone_tmpl, ev_id)
             continue
@@ -273,6 +301,9 @@ def judge(args):
                     'embedding_b64': base64.b64encode(emb.astype(np.float32).tobytes()).decode(),
                     'reason': f"gate ATTACH to event {best['id']} (cos {best_sim:.3f})",
                 })
+                ev = alias_evidence(args.extra_key, art_id, title)
+                if ev:
+                    decisions.append(ev)
                 continue
 
         # Found a new event for it
@@ -443,9 +474,15 @@ def apply(args):
         logging.critical(f"No decision files under {args.decisions_dir}")
         sys.exit(1)
     decisions, pending, seen = [], [], set()
+    alias_votes = {}
     for fp in files:
         for line in open(fp):
             d = json.loads(line)
+            if d['action'] == 'alias_evidence':
+                a = d.get('alias', '')
+                if a:
+                    alias_votes.setdefault(a, set()).add(d['article_id'])
+                continue
             if d['article_id'] in seen:
                 continue
             if d['action'] in ('attach', 'found'):
@@ -454,6 +491,14 @@ def apply(args):
             elif d['action'] == 'attach_pending':
                 seen.add(d['article_id'])
                 pending.append(d)
+
+    # Qwen-certified aliases: the gate approved N distinct headlines that use
+    # this short form standalone. Enough confirmations = safe to track.
+    confirmed = sorted(a for a, arts in alias_votes.items() if len(arts) >= ALIAS_MIN_CONFIRMATIONS)
+    with open('confirmed_aliases.txt', 'w') as f:
+        f.write('\n'.join(confirmed) + ('\n' if confirmed else ''))
+    if alias_votes:
+        logging.info(f"Alias evidence: { {a: len(v) for a, v in alias_votes.items()} } -> confirmed: {confirmed}")
     decisions.sort(key=lambda d: d.get('scraped_at', 0))
     logging.info(f"Applying {len(decisions)} decisions (+{len(pending)} pending sibling attaches) from {len(files)} files...")
 

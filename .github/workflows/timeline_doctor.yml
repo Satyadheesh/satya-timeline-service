@@ -193,16 +193,30 @@ jobs:
         run: |
           NAME="${{ github.event.inputs.target }}"
           touch tracked_figures.txt
-          if grep -qixF "$NAME" tracked_figures.txt; then
-            echo "'$NAME' already tracked."
-          else
+          ADDED=""
+          if ! grep -qixF "$NAME" tracked_figures.txt; then
             echo "$NAME" >> tracked_figures.txt
+            ADDED="$NAME"
+          fi
+          # Qwen-certified aliases mined during this run (3+ headline confirmations)
+          if [ -s confirmed_aliases.txt ]; then
+            while IFS= read -r ALIAS; do
+              [ -z "$ALIAS" ] && continue
+              if ! grep -qixF "$ALIAS" tracked_figures.txt; then
+                echo "$ALIAS" >> tracked_figures.txt
+                ADDED="$ADDED, $ALIAS"
+              fi
+            done < confirmed_aliases.txt
+          fi
+          if [ -n "$ADDED" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add tracked_figures.txt
-            git commit -m "Track figure: $NAME (via Timeline Doctor)"
+            git commit -m "Track figure(s): $ADDED (via Timeline Doctor, aliases Qwen-certified)"
             git pull --rebase origin main && git push
-            echo "'$NAME' registered for permanent tracking."
+            echo "Registered: $ADDED"
+          else
+            echo "Nothing new to register."
           fi
 
       # Work unfinished (time budget hit): re-dispatch OURSELVES with the same
