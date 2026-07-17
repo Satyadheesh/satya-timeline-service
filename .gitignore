@@ -10,3 +10,4 @@ merged.db
 run_out.log
 pipeline.log
 *.zip
+confirmed_aliases.txt

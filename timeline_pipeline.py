@@ -492,6 +492,41 @@ def get_closure_decisions(cursor, llm_9b, event_id, closure_audit_prompt_templat
         
     return evicted_article_ids, linked_event_ids
 
+def reframe_event(cursor, llm_9b, event_id, title_tmpl, scope_tmpl, min_articles=5):
+    """Re-derive title AND scope from the event's FULL milestone set. Fixes
+    framing drift: an event founded from one article (or absorbing a bigger
+    sub-story later) otherwise keeps its stale founding title/scope forever.
+    Run at closure, when all articles are in. No-op for tiny events."""
+    cursor.execute("SELECT COUNT(*) FROM event_articles WHERE event_id = ?", (event_id,))
+    if cursor.fetchone()[0] < min_articles:
+        return
+    cursor.execute("""
+        SELECT COALESCE(ea.milestone, a.rephrased_title, a.title)
+        FROM event_articles ea JOIN articles a ON a.id = ea.article_id
+        WHERE ea.event_id = ? ORDER BY ea.event_date ASC
+    """, (event_id,))
+    milestones = [r[0] for r in cursor.fetchall() if r[0]]
+    if len(milestones) < min_articles:
+        return
+    try:
+        # Title from the whole arc (sample across the story, not just the top)
+        sample = milestones[:20]
+        out = llm_9b(title_tmpl.format(milestones="\n".join(f"- {m}" for m in sample)),
+                     max_tokens=60, stop=["<|im_end|>"], temperature=0.0)
+        new_title = clean_title(out['choices'][0]['text'])
+        if not new_title:
+            return
+        new_scope = generate_event_scope(llm_9b, scope_tmpl, new_title, " ".join(milestones[:8]))
+        if new_scope:
+            cursor.execute("UPDATE events SET title = ?, slug = ?, scope = ? WHERE id = ?",
+                           (new_title, slugify(new_title), new_scope, event_id))
+        else:
+            cursor.execute("UPDATE events SET title = ?, slug = ? WHERE id = ?",
+                           (new_title, slugify(new_title), event_id))
+        logging.info(f"  [REFRAME] Event {event_id} re-titled from {len(milestones)} milestones: '{new_title}'")
+    except Exception as e:
+        logging.error(f"Reframe failed for event {event_id}: {e}")
+
 def do_closure_write(cursor, encoder, event_id, evicted_article_ids, linked_event_ids):
     # Apply evictions
     for art_id in evicted_article_ids:
@@ -549,6 +584,25 @@ def slugify(text):
     text = re.sub(r'[^a-z0-9\s-]', '', text)
     text = re.sub(r'[\s-]+', '-', text)
     return text
+
+# Small words that number-tokens attach to ("28-day", "Rs 5,000") — spelled-out
+# numbers the model may legitimately rephrase are NOT policed; only digits.
+def numbers_grounded(text, *sources):
+    """True unless the text contains a digit-number that appears in NONE of the
+    sources. Guards against small-model hallucinations like turning 'till
+    July 20' into '28-day'. Compares on the bare digit string so '5,000' and
+    '5000', '18' and '18-day' all match."""
+    def digits(s):
+        return set(re.findall(r'\d+', (s or '').replace(',', '')))
+    src = set()
+    for s in sources:
+        src |= digits(s)
+    for n in re.findall(r'\d+', (text or '').replace(',', '')):
+        # Years and single/double digits phrased differently are common; only
+        # flag numbers genuinely absent from every source.
+        if n not in src:
+            return False, n
+    return True, None
 
 def clean_title(raw):
     """Sanitize a generated event title. Qwen sometimes appends its reasoning
@@ -655,7 +709,8 @@ def do_checkpoint_write(cursor, art_id, scraped_at=0):
     else:
         cursor.execute("INSERT OR REPLACE INTO timeline_checkpoint (id, last_article_id) VALUES (1, ?)", (art_id,))
 
-def run_final_seal(conn, encoder, llm_9b, closure_audit_prompt_template, saga_check_prompt_template):
+def run_final_seal(conn, encoder, llm_9b, closure_audit_prompt_template, saga_check_prompt_template,
+                   title_prompt_template=None, event_scope_prompt_template=None):
     """Shard mode only: the shard's window is exhausted — run the full closure
     ceremony (exit audit + saga check) on EVERY remaining open event and close
     it. Deadline-aware and resumable: each closure commits individually, so an
@@ -684,6 +739,10 @@ def run_final_seal(conn, encoder, llm_9b, closure_audit_prompt_template, saga_ch
                 evicted_ids,
                 linked_ids
             )
+            if title_prompt_template and event_scope_prompt_template:
+                def _reframe(cur):
+                    reframe_event(cur, llm_9b, ev_id, title_prompt_template, event_scope_prompt_template)
+                conn, _ = run_write_burst_with_reconnect(conn, _reframe)
             logging.info(f"[FINAL SEAL] Event {ev_id} closed.")
         except Exception as e:
             logging.error(f"[FINAL SEAL] Failed closing event {ev_id}: {e}")
@@ -1035,6 +1094,10 @@ def main():
                                 evicted_ids,
                                 linked_ids
                             )
+                            # Re-derive title/scope from the whole story (fixes framing drift)
+                            def _reframe(cur):
+                                reframe_event(cur, llm_9b, ev_id, title_prompt_template, event_scope_prompt_template)
+                            conn, _ = run_write_burst_with_reconnect(conn, _reframe)
                             cursor = conn.cursor()
                             logging.info(f"Event ID {ev_id} closed successfully.")
                         except Exception as e:
@@ -1234,14 +1297,18 @@ def main():
                     output = llm_2b(prompt, max_tokens=100, stop=["<end_of_turn>"], temperature=0.1)
                     gen_milestone = output['choices'][0]['text'].strip()
 
-                    # Validate milestone (max 30 words, no quotes)
+                    # Validate milestone (max 30 words, no quotes, numbers grounded)
                     words = gen_milestone.split()
                     valid = True
                     if len(words) < 3 or len(words) > 30:
                         valid = False
                     if gen_milestone.startswith('"') or gen_milestone.endswith('"') or gen_milestone.startswith("'") or gen_milestone.endswith("'"):
                         valid = False
-                    
+                    grounded, bad_num = numbers_grounded(gen_milestone, orig_title, decompressed_article)
+                    if not grounded:
+                        valid = False
+                        logging.info(f"  Milestone rejected: hallucinated number '{bad_num}' not in source.")
+
                     if valid:
                         milestone = gen_milestone
                         logging.info(f"  Generated Milestone: '{milestone}'")
@@ -1440,7 +1507,8 @@ def main():
     if SHARD_CTX and not args.dry_run and has_more == "false":
         conn, sealed_all = run_final_seal(
             conn, encoder, llm_9b,
-            closure_audit_prompt_template, saga_check_prompt_template
+            closure_audit_prompt_template, saga_check_prompt_template,
+            title_prompt_template, event_scope_prompt_template
         )
         if sealed_all:
             def _mark_shard_done(cur):
