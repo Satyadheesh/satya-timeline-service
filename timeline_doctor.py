@@ -151,6 +151,19 @@ def judge(args):
         sys.exit(1)
 
     conn = get_db_connection()
+
+    # Articles AHEAD of the daily runner's bookmark must not be doctored: the
+    # runner would process them again tonight and file duplicates. They're not
+    # broken — just not yet reached.
+    checkpoint = 0
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT last_article_id FROM timeline_checkpoint WHERE id = 1")
+        row = cur.fetchone()
+        checkpoint = int(row[0]) if row else 0
+    except Exception as e:
+        logging.warning(f"Could not read checkpoint ({e}) — ahead-of-runner guard disabled.")
+
     encoder, llm_2b, llm_9b = load_models()
     gate_tmpl = read_prompt('attach_gate')
     milestone_tmpl = read_prompt('milestone')
@@ -177,6 +190,11 @@ def judge(args):
                               'reason': 'not timeline-eligible (entities/category filter)'})
             logging.info("  -> skip: not eligible")
             continue
+
+        if checkpoint and art_id > checkpoint:
+            # Safe since the daily runner skips already-filed articles
+            # (NOT-IN event_articles) — it will simply step over this one.
+            logging.info(f"  note: ahead of daily bookmark ({checkpoint}) — runner will skip it once filed")
 
         attached = already_attached(conn, art_id)
         if attached:
@@ -232,6 +250,21 @@ def judge(args):
         })
         logging.info("  -> will found new event")
 
+        # Smart mode: pull the rest of the story in automatically. Hunt for
+        # unattached eligible articles that belong to this new event, so one
+        # article id is enough to build the whole timeline.
+        if check_siblings:
+            pseudo_event = {'id': None, 'title': title, 'scope': scope,
+                            'first_seen': scraped_at, 'last_seen': scraped_at,
+                            'keys': set(entities), 'centroid': emb}
+            sibs = hunt_story_siblings(conn, encoder, llm_9b, llm_2b, gate_tmpl,
+                                       milestone_tmpl, pseudo_event, exclude={art_id})
+            for s in sibs:
+                s['action'] = 'attach_pending'
+                s['anchor_article_id'] = art_id
+            decisions += sibs
+            logging.info(f"  smart hunt: {len(sibs)} sibling article(s) will join the new event")
+
     out_path = args.out or f"decisions_{args.tag or 'run'}.jsonl"
     with open(out_path, 'w') as f:
         for d in decisions:
@@ -241,6 +274,53 @@ def judge(args):
         counts[d['action']] = counts.get(d['action'], 0) + 1
     logging.info(f"\nJudge done: {counts} -> {out_path}")
     conn.close()
+
+
+def hunt_story_siblings(conn, encoder, llm_9b, llm_2b, gate_tmpl, milestone_tmpl, ev, exclude=frozenset()):
+    """Generic sibling hunt around an event dict (real or pseudo): unattached
+    eligible articles in the window, sharing keys, cosine-close, gate-approved."""
+    cursor = conn.cursor()
+    cursor.execute(f"""
+        SELECT a.id, a.title, a.rephrased_title, a.rephrased_article, a.scraped_at,
+               a.party_mentioned, a.ministers_mentioned, a.states_mentioned, a.cities_mentioned
+        FROM articles a
+        WHERE a.scraped_at BETWEEN ? AND ?
+          AND {ELIGIBILITY_SQL}
+          AND a.id NOT IN (SELECT article_id FROM event_articles)
+        LIMIT 200
+    """, (ev['first_seen'] - WINDOW_AFTER, ev['last_seen'] + WINDOW_AFTER))
+    ms = recent_milestones(conn, ev['id']) if ev['id'] else []
+    out, checked = [], 0
+    for r in cursor.fetchall():
+        if int(r[0]) in exclude:
+            continue
+        entities = extract_keys(r[5], r[6], r[7], r[8])
+        if not ev['keys'].intersection(entities):
+            continue
+        title = r[2] or r[1] or ''
+        summary = decompress_text(r[3])
+        emb = encoder.encode(f"{title} {summary}".strip(), convert_to_numpy=True)
+        n = np.linalg.norm(emb)
+        if n > 0:
+            emb = emb / n
+        sim = float(np.dot(ev['centroid'], emb))
+        if sim < SIM_THRESHOLD:
+            continue
+        if checked >= 15:
+            logging.info("  sibling hunt: 15-check cap reached")
+            break
+        checked += 1
+        verdict, _raw = gate_verdict(llm_9b, gate_tmpl, ev, ms, title, summary, int(r[4] or 0))
+        logging.info(f"  sibling {r[0]} '{title[:50]}' cos {sim:.3f} -> {verdict}")
+        if verdict == 'ATTACH':
+            out.append({
+                'article_id': int(r[0]), 'action': 'attach', 'event_id': ev['id'],
+                'milestone': gen_milestone(llm_2b, milestone_tmpl, title, summary),
+                'scraped_at': int(r[4] or 0), 'entities': list(entities),
+                'embedding_b64': base64.b64encode(emb.astype(np.float32).tobytes()).decode(),
+                'reason': f"sibling of {'event ' + str(ev['id']) if ev['id'] else 'new story'} (cos {sim:.3f})",
+            })
+    return out
 
 
 def hunt_siblings(conn, encoder, llm_9b, llm_2b, gate_tmpl, milestone_tmpl, event_id):
@@ -322,19 +402,25 @@ def apply(args):
     if not files:
         logging.critical(f"No decision files under {args.decisions_dir}")
         sys.exit(1)
-    decisions, seen = [], set()
+    decisions, pending, seen = [], [], set()
     for fp in files:
         for line in open(fp):
             d = json.loads(line)
-            if d['action'] in ('attach', 'found') and d['article_id'] not in seen:
+            if d['article_id'] in seen:
+                continue
+            if d['action'] in ('attach', 'found'):
                 seen.add(d['article_id'])
                 decisions.append(d)
+            elif d['action'] == 'attach_pending':
+                seen.add(d['article_id'])
+                pending.append(d)
     decisions.sort(key=lambda d: d.get('scraped_at', 0))
-    logging.info(f"Applying {len(decisions)} decisions from {len(files)} files (chronological)...")
+    logging.info(f"Applying {len(decisions)} decisions (+{len(pending)} pending sibling attaches) from {len(files)} files...")
 
     conn = get_db_connection()
     now = int(datetime.now().timestamp())
     founded_this_pass = []  # {'id','keys','centroid'} for duplicate-found downgrade
+    anchor_events = {}      # anchor article_id -> event id (for pending sibling attaches)
     applied = {'attach': 0, 'found': 0, 'downgraded': 0, 'skipped': 0}
 
     for d in decisions:
@@ -364,6 +450,7 @@ def apply(args):
                 continue
             conn, _ = run_write_burst_with_reconnect(conn, _apply_attach, d, ev_row)
             applied['attach'] += 1
+            anchor_events[d['article_id']] = d['event_id']
             logging.info(f"ATTACHED article {d['article_id']} -> event {d['event_id']}")
         else:
             state = 'closed' if (now - d['scraped_at']) > 21 * 86400 else 'open'
@@ -384,8 +471,36 @@ def apply(args):
                                (new_id, d['article_id'], d.get('milestone'), d['scraped_at']))
             conn, _ = run_write_burst_with_reconnect(conn, _member)
             founded_this_pass.append({'id': new_id, 'keys': set(d.get('entities', [])), 'centroid': emb})
+            anchor_events[d['article_id']] = new_id
             applied['found'] += 1
             logging.info(f"FOUNDED event {new_id} ({state}) for article {d['article_id']}")
+
+    # Pass 2: sibling attaches that were waiting for their anchor's event id
+    for d in sorted(pending, key=lambda x: x.get('scraped_at', 0)):
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM event_articles WHERE article_id = ?", (d['article_id'],))
+        if cursor.fetchone():
+            applied['skipped'] += 1
+            continue
+        ev_id = anchor_events.get(d.get('anchor_article_id'))
+        if ev_id is None:
+            # anchor may already have been in the DB — resolve directly
+            cursor.execute("SELECT event_id FROM event_articles WHERE article_id = ?", (d.get('anchor_article_id'),))
+            row = cursor.fetchone()
+            ev_id = row[0] if row else None
+        if ev_id is None:
+            applied['skipped'] += 1
+            logging.warning(f"Pending sibling {d['article_id']}: anchor {d.get('anchor_article_id')} has no event — skipped")
+            continue
+        cursor.execute("SELECT article_count, centroid, entity_keys, last_seen FROM events WHERE id = ?", (ev_id,))
+        ev_row = cursor.fetchone()
+        if not ev_row:
+            applied['skipped'] += 1
+            continue
+        d2 = {**d, 'event_id': ev_id}
+        conn, _ = run_write_burst_with_reconnect(conn, _apply_attach, d2, ev_row)
+        applied['attach'] += 1
+        logging.info(f"ATTACHED sibling {d['article_id']} -> event {ev_id}")
 
     logging.info(f"\nApply done: {applied}")
     print(f"doctor_attached={applied['attach']}")

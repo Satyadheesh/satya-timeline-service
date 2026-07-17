@@ -319,8 +319,27 @@ def _set_checkpoint(cursor, max_id):
     cursor.execute("INSERT OR REPLACE INTO timeline_checkpoint (id, last_article_id) VALUES (1, ?)", (max_id,))
 
 
-def upload(merged, max_id, ev_total, ea_total, set_checkpoint=True):
+def upload(merged, max_id, ev_total, ea_total, set_checkpoint=True, force=False):
     remote = turso_connect()
+
+    # LIVE-DATA GUARD: once the daily runner has moved past the snapshot,
+    # the remote events include work that exists NOWHERE else (daily runs,
+    # Timeline Doctor repairs). A stitch wipe would erase it permanently.
+    try:
+        cur = remote.cursor()
+        cur.execute("SELECT last_article_id FROM timeline_checkpoint WHERE id = 1")
+        row = cur.fetchone()
+        remote_ckpt = int(row[0]) if row else 0
+        if remote_ckpt > max_id and not force:
+            logging.critical(
+                f"REFUSING TO WIPE: remote checkpoint is {remote_ckpt}, beyond this snapshot's max_id {max_id}. "
+                f"The live DB contains post-replay events (daily runs / Doctor repairs) that this stitch would DESTROY. "
+                f"If you truly intend a full rebuild, re-run with force_overwrite_live.")
+            sys.exit(1)
+    except SystemExit:
+        raise
+    except Exception as e:
+        logging.warning(f"Could not verify live-data guard ({e}) — proceeding.")
 
     logging.info("Wiping remote events / event_articles...")
     remote, _ = run_write_burst_with_reconnect(remote, _wipe_remote)
@@ -382,6 +401,8 @@ def main():
     parser.add_argument('--upload-only', action='store_true',
                         help="Skip verify/merge/saga: upload an EXISTING merged.db (from the timeline-merged "
                              "artifact of a previous stitch run). Recovery path for a stitch that died mid-upload.")
+    parser.add_argument('--force-overwrite-live', action='store_true',
+                        help="Override the live-data guard: wipe even though the DB contains post-snapshot events.")
     args = parser.parse_args()
 
     if args.upload_only:
@@ -399,7 +420,7 @@ def main():
         partial = bool(args.shards.strip())
         logging.info(f"UPLOAD-ONLY: {ev_total} events, {ea_total} member rows from {args.merged} "
                      f"(checkpoint {'skipped — partial' if partial else f'will be set to {max_id}'})")
-        upload(merged, max_id, ev_total, ea_total, set_checkpoint=not partial)
+        upload(merged, max_id, ev_total, ea_total, set_checkpoint=not partial, force=args.force_overwrite_live)
         merged.close()
         print(f"stitch_events={ev_total}")
         print(f"stitch_members={ea_total}")
@@ -443,7 +464,7 @@ def main():
     if args.dry_run:
         logging.info("--dry-run: skipping Turso upload. merged.db is ready for inspection.")
     else:
-        upload(merged, max_id, ev_total, ea_total, set_checkpoint=not partial)
+        upload(merged, max_id, ev_total, ea_total, set_checkpoint=not partial, force=args.force_overwrite_live)
 
     merged.close()
     print(f"stitch_events={ev_total}")

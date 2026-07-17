@@ -866,12 +866,16 @@ def main():
                   SHARD_CTX['to_ts'], SHARD_CTX['to_ts'], SHARD_CTX['to_id'],
                   batch_size))
         else:
+            # NOT-IN clause: idempotency. Articles already filed (e.g. by the
+            # Timeline Doctor ahead of this cursor) are stepped over instead of
+            # being processed twice.
             cursor.execute(f"""
                 SELECT a.id, a.title, a.rephrased_title, a.rephrased_article, a.scraped_at,
                        a.party_mentioned, a.ministers_mentioned, a.states_mentioned, a.cities_mentioned, a.civic_flag
                 FROM articles a
                 WHERE a.id > ?
                   AND {ELIGIBILITY_SQL}
+                  AND a.id NOT IN (SELECT article_id FROM event_articles)
                 ORDER BY a.id ASC
                 LIMIT ?
             """, (start_id, batch_size))
@@ -1365,6 +1369,7 @@ def main():
                     SELECT a.id FROM articles a
                     WHERE a.id > ?
                       AND {ELIGIBILITY_SQL}
+                      AND a.id NOT IN (SELECT article_id FROM event_articles)
                     LIMIT 1
                 """, (last_processed_id,))
             row = cursor.fetchone()
