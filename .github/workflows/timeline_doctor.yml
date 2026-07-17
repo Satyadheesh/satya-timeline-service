@@ -144,7 +144,10 @@ jobs:
           retention-days: 30
 
   apply:
-    needs: judge
+    needs: [prepare, judge]
+    # Run even if some judge slices failed: apply whatever decisions exist
+    # (idempotent), instead of throwing away the successful slices' work.
+    if: ${{ always() && needs.prepare.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 180
     permissions:
