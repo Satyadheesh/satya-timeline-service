@@ -59,6 +59,48 @@ ELIGIBILITY_SQL = """a.status IN ('classified','entity_processed','processed')
                    OR a.cities_mentioned NOT IN ('[]',''))
               AND (a.ministers_mentioned != '[]' OR a.party_mentioned != '[]' OR a.civic_flag = 1)"""
 
+# --- Tracked figures (simple, local, zero-dependency) ---
+# tracked_figures.txt holds names registered via the Timeline Doctor's name
+# mode (or by hand). The forward runner treats a title match as eligible and
+# stamps the figure's key on the article — so one Doctor run keeps a person
+# tracked forever, without touching the classifier or entity library.
+def load_tracked_figures():
+    path = os.path.join(os.path.dirname(__file__), 'tracked_figures.txt')
+    names = []
+    try:
+        with open(path) as f:
+            for line in f:
+                n = line.strip()
+                if len(n) >= 5 and not n.startswith('#'):
+                    names.append(n)
+    except FileNotFoundError:
+        pass
+    return names
+
+TRACKED_FIGURES = load_tracked_figures()
+
+def tracked_match_sql():
+    """(clause, params): does the article's title mention a tracked figure?
+    Returns a never-true clause when the list is empty (zero behavior change)."""
+    if not TRACKED_FIGURES:
+        return "0", []
+    parts, params = [], []
+    for n in TRACKED_FIGURES:
+        like = "%" + n.replace("%", "").replace("_", " ") + "%"
+        parts.append("(a.title LIKE ? OR a.rephrased_title LIKE ?)")
+        params += [like, like]
+    return "(a.status IN ('classified','entity_processed','processed') AND (" + " OR ".join(parts) + "))", params
+
+def tracked_keys_for(text):
+    keys = []
+    low = (text or '').lower()
+    for n in TRACKED_FIGURES:
+        if n.lower() in low:
+            k = re.sub(r'[^a-z0-9]+', '_', n.lower()).strip('_')
+            if k:
+                keys.append(k)
+    return keys
+
 # Local schema for a shard's own event DB (mirrors production tables, plus
 # last_scraped_at on the checkpoint because shards process in (scraped_at, id)
 # order, and shard_meta for the done flag).
@@ -868,17 +910,19 @@ def main():
         else:
             # NOT-IN clause: idempotency. Articles already filed (e.g. by the
             # Timeline Doctor ahead of this cursor) are stepped over instead of
-            # being processed twice.
+            # being processed twice. Tracked-figure title matches are eligible
+            # even without entity tags.
+            tf_clause, tf_params = tracked_match_sql()
             cursor.execute(f"""
                 SELECT a.id, a.title, a.rephrased_title, a.rephrased_article, a.scraped_at,
                        a.party_mentioned, a.ministers_mentioned, a.states_mentioned, a.cities_mentioned, a.civic_flag
                 FROM articles a
                 WHERE a.id > ?
-                  AND {ELIGIBILITY_SQL}
+                  AND (({ELIGIBILITY_SQL}) OR {tf_clause})
                   AND a.id NOT IN (SELECT article_id FROM event_articles)
                 ORDER BY a.id ASC
                 LIMIT ?
-            """, (start_id, batch_size))
+            """, (start_id, *tf_params, batch_size))
         articles_rows = cursor.fetchall()
     except Exception as e:
         logging.critical(f"Failed to fetch articles batch: {e}")
@@ -1042,8 +1086,12 @@ def main():
         last_processed_id = art_id
         last_processed_sa = scraped_at
 
-        # Parse entities
-        art_entities = extract_keys(row[5], row[6], row[7], row[8])
+        # Parse entities (+ stamp tracked-figure keys so matching works even
+        # when the classifier didn't tag the person)
+        art_entities = list(extract_keys(row[5], row[6], row[7], row[8]))
+        for tk in tracked_keys_for(f"{reph_title} {orig_title}"):
+            if tk not in art_entities:
+                art_entities.append(tk)
 
         logging.info(f"\nProcessing article ID {art_id}: '{reph_title}'")
         logging.info(f"  Entities: {art_entities}")
@@ -1365,13 +1413,14 @@ def main():
                       SHARD_CTX['from_ts'], SHARD_CTX['from_ts'], SHARD_CTX['from_id'],
                       SHARD_CTX['to_ts'], SHARD_CTX['to_ts'], SHARD_CTX['to_id']))
             else:
+                tf_clause, tf_params = tracked_match_sql()
                 cursor.execute(f"""
                     SELECT a.id FROM articles a
                     WHERE a.id > ?
-                      AND {ELIGIBILITY_SQL}
+                      AND (({ELIGIBILITY_SQL}) OR {tf_clause})
                       AND a.id NOT IN (SELECT article_id FROM event_articles)
                     LIMIT 1
-                """, (last_processed_id,))
+                """, (last_processed_id, *tf_params))
             row = cursor.fetchone()
             if row:
                 has_more = "true"
