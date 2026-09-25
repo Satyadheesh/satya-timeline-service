@@ -173,5 +173,16 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Keepalive Workflow
-        uses: gautamkrishnar/keepalive-workflow@v2
+      - name: Native Keepalive
+        run: |
+          LAST_COMMIT=$(git log -1 --format=%ct)
+          NOW=$(date +%s)
+          DIFF=$(( (NOW - LAST_COMMIT) / 86400 ))
+          if [ "$DIFF" -gt 40 ]; then
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "chore: keepalive to prevent workflow suspension"
+            git push
+          else
+            echo "Last commit was $DIFF days ago. No keepalive needed."
+          fi
