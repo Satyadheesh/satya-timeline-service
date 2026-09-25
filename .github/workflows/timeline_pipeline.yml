@@ -164,3 +164,14 @@ jobs:
           gh issue create \
             --title "Timeline Pipeline Failure — Run #${{ github.run_number }}" \
             --body "The timeline pipeline run failed. Please review the action run logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Keepalive Workflow
+        uses: gautamkrishnar/keepalive-workflow@v2
