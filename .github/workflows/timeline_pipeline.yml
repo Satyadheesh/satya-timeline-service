@@ -131,8 +131,18 @@ jobs:
           DEADLINE=$(( $(date +%s) + 130*60 ))
           ARGS="$ARGS --deadline-ts $DEADLINE --batch-size 200"
 
-          # Execute pipeline and capture outputs
-          python timeline_pipeline.py $ARGS | tee pipeline.log
+          # Execute pipeline and capture outputs. stderr too (that's where logging goes),
+          # the real exit code (plain `| tee` hid every crash as a green run), and peak RSS.
+          set +e
+          /usr/bin/time -v python timeline_pipeline.py $ARGS 2>&1 | tee pipeline.log
+          CODE=${PIPESTATUS[0]}
+          set -e
+          echo "::group::runner memory / OOM check"
+          free -m | tee -a pipeline.log
+          grep -E "Maximum resident|Exit status|Elapsed" pipeline.log | tail -3 || true
+          sudo dmesg 2>/dev/null | grep -iE "killed process|out of memory|oom" | tail -5 | tee -a pipeline.log || true
+          echo "::endgroup::"
+          echo "pipeline_exit=$CODE" | tee -a pipeline.log
 
           # Extract variables and write to $GITHUB_OUTPUT
           HAS_MORE=$(grep "has_more=" pipeline.log | cut -d= -f2 || echo "false")
@@ -142,6 +152,27 @@ jobs:
           echo "articles_attached=$ART_ATTACHED" >> $GITHUB_OUTPUT
 
           echo "GHA OUTPUT - has_more: $HAS_MORE, articles_attached: $ART_ATTACHED"
+          if [ "$CODE" != "0" ]; then
+            echo "::error::timeline_pipeline.py exited with $CODE — see the log on the run-logs branch"
+            exit "$CODE"
+          fi
+
+      # Keep the full log readable without GitHub log downloads (run-logs branch).
+      - name: Publish run log
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN: ${{ github.run_id }}
+        run: |
+          [ -f pipeline.log ] || exit 0
+          rm -rf /tmp/wt && mkdir /tmp/wt && cp pipeline.log /tmp/pipeline.log && cd /tmp/wt && git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth 1 origin run-logs; then git checkout -q -b run-logs FETCH_HEAD; else git checkout -q --orphan run-logs; fi
+          mkdir -p runs && tail -c 900000 /tmp/pipeline.log > "runs/$RUN.log" && cp "runs/$RUN.log" latest.log
+          ls -1t runs | tail -n +31 | sed 's#^#runs/#' | xargs -r git rm -q   # keep last 30
+          git add -A && git commit -qm "run $RUN log" && git push -q origin HEAD:run-logs
 
       - name: Trigger next Timeline run if remaining
         if: steps.run-pipeline.outputs.has_more == 'true' && github.event.inputs.dry_run != 'true'
