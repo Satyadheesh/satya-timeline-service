@@ -529,12 +529,13 @@ def reframe_event(cursor, llm_9b, event_id, title_tmpl, scope_tmpl, min_articles
         if not new_title:
             return
         new_scope = generate_event_scope(llm_9b, scope_tmpl, new_title, " ".join(milestones[:8]))
+        new_slug = unique_slug(cursor, slugify(new_title), event_id)
         if new_scope:
             cursor.execute("UPDATE events SET title = ?, slug = ?, scope = ? WHERE id = ?",
-                           (new_title, slugify(new_title), new_scope, event_id))
+                           (new_title, new_slug, new_scope, event_id))
         else:
             cursor.execute("UPDATE events SET title = ?, slug = ? WHERE id = ?",
-                           (new_title, slugify(new_title), event_id))
+                           (new_title, new_slug, event_id))
         logging.info(f"  [REFRAME] Event {event_id} re-titled from {len(milestones)} milestones: '{new_title}'")
     except Exception as e:
         logging.error(f"Reframe failed for event {event_id}: {e}")
@@ -591,6 +592,17 @@ def load_models(dry_run=False):
 
     return encoder, llm_2b, llm_9b
 
+def unique_slug(cursor, slug, event_id):
+    """Slug that no OTHER event uses. Different stories often get the same
+    generated title; a bare slugify() then violates UNIQUE(events.slug), and
+    that write failure froze the forward runner on article 119618 (2026-09-09)."""
+    if not slug:
+        return slug
+    cursor.execute("SELECT 1 FROM events WHERE slug = ? AND id != ?", (slug, event_id))
+    if cursor.fetchone() is None:
+        return slug
+    return f"{slug}-{event_id}"
+
 def slugify(text):
     text = text.lower().strip()
     text = re.sub(r'[^a-z0-9\s-]', '', text)
@@ -643,7 +655,9 @@ def run_write_burst_with_reconnect(conn, write_func, *args, **kwargs):
             res = write_func(cursor, *args, **kwargs)
             conn.commit()
             return conn, res
-        except Exception as e:
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except BaseException as e:  # incl. libsql's pyo3 PanicException on a dead stream
             logging.error(f"Database write attempt {attempt+1} failed: {e}")
             try:
                 conn.rollback()
@@ -653,11 +667,14 @@ def run_write_burst_with_reconnect(conn, write_func, *args, **kwargs):
                 logging.info("Reconnecting database and retrying write burst...")
                 try:
                     conn.close()
-                except Exception:
+                except BaseException:
                     pass
                 conn = get_db_connection()
             else:
-                raise e
+                # re-raise as a normal Exception so callers' `except Exception` handlers work
+                if isinstance(e, Exception):
+                    raise e
+                raise RuntimeError(f"database driver panic: {e}") from e
 
 def do_attach_write(cursor, matched_event_id, art_id, milestone, scraped_at, new_centroid, new_count, merged_keys, event_title, event_slug, linked_saga_event_ids):
     cursor.execute("""
@@ -671,6 +688,7 @@ def do_attach_write(cursor, matched_event_id, art_id, milestone, scraped_at, new
     # frontend).
     # state='open': attaching an article REACTIVATES the event. A recently
     # closed story that gets fresh news reopens instead of spawning a twin.
+    event_slug = unique_slug(cursor, event_slug, matched_event_id)
     cursor.execute("""
         UPDATE events
         SET centroid = ?, last_seen = ?, article_count = ?, entity_keys = ?,
@@ -790,6 +808,11 @@ def run_null_milestone_sweep(conn, llm_2b, llm_9b, milestone_prompt_template, ve
     import zlib
     def decode_and_decompress(val):
         if not val: return None
+        if isinstance(val, (bytes, bytearray, memoryview)):
+            try:
+                return zlib.decompress(bytes(val)).decode('utf-8')
+            except Exception:
+                return bytes(val).decode('utf-8', 'ignore')
         try:
             b64_str = val
             if isinstance(val, dict):
@@ -1241,7 +1264,7 @@ def main():
         try:
             if not args.dry_run and not SHARD_CTX:
                 logging.info("\nChecking for historical NULL milestones to backfill...")
-                conn = run_null_milestone_sweep(conn, llm_2b, llm_9b, milestone_prompt_template, verify_milestone_prompt_template, batch_size=50)
+                conn = run_null_milestone_sweep(conn, llm_2b, llm_9b, milestone_prompt_template, verify_milestone_prompt_template, batch_size=20)
         except Exception as e:
             logging.error(f"Failed to run NULL milestone sweep: {e}")
 
@@ -1627,11 +1650,18 @@ def main():
                     attached_count += 1
                     logging.info(f"  Created new invisible Event ID {new_ev_id}.")
 
-        except Exception as err:
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except BaseException as err:
             # Poison pill guard: skip this article, advance cursor, and continue
             logging.error(f"Poison-pill encountered for article ID {art_id}: {err}")
             if not args.dry_run:
                 try:
+                    try:
+                        conn.close()
+                    except BaseException:
+                        pass
+                    conn = get_db_connection()
                     conn, _ = run_write_burst_with_reconnect(
                         conn,
                         do_checkpoint_write,
@@ -1708,6 +1738,13 @@ def main():
         pass
 
     logging.info(f"Batch completed. attached={attached_count}, has_more={has_more}")
+    advanced = last_processed_id != start_id or attached_count > 0
+    if not args.dry_run and not SHARD_CTX and articles_rows and not advanced:
+        logging.critical(f"NO PROGRESS: {len(articles_rows)} eligible articles fetched but the cursor did not move "
+                         f"past {start_id}. Failing the run so it is noticed.")
+        print(f"has_more={has_more}")
+        print(f"articles_attached={attached_count}")
+        sys.exit(3)
     
     # Dry Run summary printing
     if args.dry_run:

@@ -42,6 +42,7 @@ from timeline_pipeline import (
     generate_event_scope,
     clean_title,
     slugify,
+    unique_slug,
     run_write_burst_with_reconnect,
     numbers_grounded,
     ELIGIBILITY_SQL,
@@ -710,12 +711,13 @@ def apply(args):
             cursor.execute("SELECT 1 FROM events WHERE id = ?", (ev_id,))
             if not cursor.fetchone():
                 return
+            slug = unique_slug(cursor, d['slug'], ev_id)
             if d.get('scope'):
                 cursor.execute("UPDATE events SET title = ?, slug = ?, scope = ? WHERE id = ?",
-                               (d['title'], d['slug'], d['scope'], ev_id))
+                               (d['title'], slug, d['scope'], ev_id))
             else:
                 cursor.execute("UPDATE events SET title = ?, slug = ? WHERE id = ?",
-                               (d['title'], d['slug'], ev_id))
+                               (d['title'], slug, ev_id))
         conn, _ = run_write_burst_with_reconnect(conn, _reframe_write)
         applied['reframed'] += 1
         logging.info(f"REFRAMED event {ev_id} -> '{d['title']}'")
