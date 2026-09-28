@@ -56,6 +56,7 @@ except Exception:
 # keys (bjp, nda, big states) can match hundreds of closed events; unbounded,
 # that loop runs for hours (cause of the 2026-07-10 6h-timeout kill).
 MAX_SAGA_LLM_CALLS = 8
+CLOSURE_BUDGET_FRAC = float(os.environ.get('CLOSURE_BUDGET_FRAC', '0.4'))
 
 class DeadlineReached(Exception):
     """Raised inside long LLM loops when DEADLINE_TS passes; callers treat the
@@ -1180,6 +1181,7 @@ def main():
             conn.close()
             sys.exit(1)
 
+    closures_done = 0
     # 4a. HOUSEKEEPING FIRST — close overdue events BEFORE filing new articles.
     # Closures are a finite queue; the article stream is infinite. Running
     # filing first starves closures forever during a backlog catch-up.
@@ -1225,10 +1227,17 @@ def main():
                 events_to_close = [r[0] for r in cursor.fetchall()]
 
                 if events_to_close:
-                    logging.info(f"Found {len(events_to_close)} events to close.")
+                    # Closures must not eat the whole run: each costs ~15 min of
+                    # saga checks, and a backlog of them starved article filing
+                    # entirely (run #346: 15 closures, 0 articles). Cap them.
+                    closure_deadline = DEADLINE_TS
+                    if DEADLINE_TS:
+                        closure_deadline = start_time + CLOSURE_BUDGET_FRAC * (DEADLINE_TS - start_time)
+                    logging.info(f"Found {len(events_to_close)} events to close (closure budget until "
+                                 f"{datetime.fromtimestamp(closure_deadline).strftime('%H:%M:%S')}).")
                     for ev_id in events_to_close:
-                        if DEADLINE_TS and time.time() >= DEADLINE_TS:
-                            logging.info("Deadline reached — remaining closures resume on next run.")
+                        if closure_deadline and time.time() >= closure_deadline:
+                            logging.info("Closure budget used — remaining closures resume on next run.")
                             break
                         logging.info(f"Closing Event ID {ev_id}...")
                         try:
@@ -1254,6 +1263,7 @@ def main():
                                 reframe_event(cur, llm_9b, ev_id, title_prompt_template, event_scope_prompt_template)
                             conn, _ = run_write_burst_with_reconnect(conn, _reframe)
                             cursor = conn.cursor()
+                            closures_done += 1
                             logging.info(f"Event ID {ev_id} closed successfully.")
                         except Exception as e:
                             logging.error(f"Failed to run closure ceremony for Event ID {ev_id}: {e}")
@@ -1738,7 +1748,7 @@ def main():
         pass
 
     logging.info(f"Batch completed. attached={attached_count}, has_more={has_more}")
-    advanced = last_processed_id != start_id or attached_count > 0
+    advanced = last_processed_id != start_id or attached_count > 0 or closures_done > 0
     if not args.dry_run and not SHARD_CTX and articles_rows and not advanced:
         logging.critical(f"NO PROGRESS: {len(articles_rows)} eligible articles fetched but the cursor did not move "
                          f"past {start_id}. Failing the run so it is noticed.")
