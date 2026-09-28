@@ -145,8 +145,11 @@ jobs:
           echo "pipeline_exit=$CODE" | tee -a pipeline.log
 
           # Extract variables and write to $GITHUB_OUTPUT
-          HAS_MORE=$(grep "has_more=" pipeline.log | cut -d= -f2 || echo "false")
-          ART_ATTACHED=$(grep "articles_attached=" pipeline.log | cut -d= -f2 || echo "0")
+          # anchored + last match only: the log now also contains logging lines like
+          # "Batch completed. attached=17, has_more=true", which broke $GITHUB_OUTPUT
+          HAS_MORE=$(grep -E '^has_more=(true|false)$' pipeline.log | tail -1 | cut -d= -f2)
+          ART_ATTACHED=$(grep -E '^articles_attached=[0-9]+$' pipeline.log | tail -1 | cut -d= -f2)
+          HAS_MORE=${HAS_MORE:-false}; ART_ATTACHED=${ART_ATTACHED:-0}
 
           echo "has_more=$HAS_MORE" >> $GITHUB_OUTPUT
           echo "articles_attached=$ART_ATTACHED" >> $GITHUB_OUTPUT
