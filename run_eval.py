@@ -232,15 +232,31 @@ def run_eval(start_index=0, limit=None, output_path=None):
 
                 t0 = time.time()
                 try:
-                    output = llm_9b(prompt, max_tokens=350, stop=["<end_of_turn>", "<eos>", "<|im_end|>"], temperature=0.0)
-                    response_text = output['choices'][0]['text'].strip()
-                    # Reasoning-first prompt: the verdict is the LAST
-                    # ATTACH/REJECT token in the response, not the first word.
-                    verdict_matches = re.findall(r'\b(ATTACH|REJECT)\b', response_text.upper())
-                    predicted = verdict_matches[-1] if verdict_matches else "REJECT"
+                    output = llm_9b(prompt, max_tokens=350, stop=["<turn|>", "<|turn>", "<eos>", "<end_of_turn>", "<|im_end|>"], temperature=0.0)
+                    raw_text = output['choices'][0]['text']
+                    # Strip internal thinking/thought channels before verdict extraction
+                    cleaned_text = re.sub(r'<\|channel\|>thought.*?<channel\|>', '', raw_text, flags=re.DOTALL)
+                    cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL).strip()
+                    response_text = cleaned_text
+
+                    # Strict last-line parser: look for ANSWER: ATTACH or ANSWER: REJECT
+                    predicted = "REJECT"  # safe default
+                    matched = False
+                    for line in reversed(response_text.splitlines()):
+                        line_clean = line.strip().upper()
+                        m = re.search(r'ANSWER:\s*(ATTACH|REJECT)', line_clean)
+                        if m:
+                            predicted = m.group(1)
+                            matched = True
+                            break
+                    if not matched:
+                        # Fallback: bare ATTACH/REJECT token on final lines
+                        verdict_matches = re.findall(r'\b(ATTACH|REJECT)\b', response_text.upper())
+                        if verdict_matches:
+                            predicted = verdict_matches[-1]
+                        else:
+                            error = "no ATTACH/REJECT token found in model output — defaulted to REJECT"
                     stage = "llm-gate"
-                    if not verdict_matches:
-                        error = "no ATTACH/REJECT token found in model output — defaulted to REJECT"
                 except Exception as e:
                     # One bad case must not kill the whole run. Log it, mark
                     # it clearly as a technical failure (not a model

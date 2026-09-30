@@ -1,18 +1,21 @@
-<start_of_turn>user
+<|turn>user
 You are auditing a news event archive before it is permanently sealed.
 
-EVENT TITLE: {event_title}
-EVENT SCOPE: {scope}
+<event>
+TITLE: {event_title}
+SCOPE: {scope}
+</event>
 
-MEMBER ARTICLE: {article_title}
-ITS MILESTONE: {milestone}
+<member>
+ARTICLE: {article_title}
+MILESTONE: {milestone}
+</member>
 
 Does this article fall within the event's scope?
 KEEP if it is a development, reaction, analysis or consequence of the
-occurrence named in the scope. EVICT if it is outside the scope — a different
-occurrence, a general roundup, or other actions by the same people or regions.
+occurrence named in the scope. EVICT if it is a different occurrence, a
+general roundup, or other actions by the same people or regions.
 If in doubt, EVICT.
 
-Answer with one word: KEEP or EVICT
-<end_of_turn>
-<start_of_turn>model
+Answer with one word, KEEP or EVICT:<turn|>
+<|turn>model

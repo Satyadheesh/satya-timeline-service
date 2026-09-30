@@ -1,4 +1,4 @@
-<start_of_turn>user
+<|turn>user
 You are auditing a news event archive before it is permanently sealed.
 
 An EVENT is one named occurrence or process — a budget, an election, a court
@@ -6,22 +6,24 @@ case, a scheme, a disaster, a controversy — including its reactions, analyses,
 follow-ups and consequences. An event is NOT a topic, a region, a party, or a
 rivalry between people.
 
-EVENT TITLE: {event_title}
-EVENT SCOPE: {scope}
+<event>
+TITLE: {event_title}
+SCOPE: {scope}
+</event>
 
-MEMBER ARTICLES ({count} total), one per line as "ID: milestone":
+<members count="{count}">
 {member_lines}
+</members>
 
-Which member articles do NOT fall within the event's scope?
-An article belongs if it is a development, reaction, analysis or consequence
-of the occurrence named in the scope. It does not belong if it is a different
+Each line is "ID: milestone". Which members do NOT fall within the event's scope?
+A member belongs if it is a development, reaction, analysis or consequence of
+the occurrence named in the scope. It does not belong if it is a different
 occurrence, a general roundup, or other actions by the same people or regions.
-If in doubt about an article, evict it.
+If in doubt about a member, evict it.
 
-Briefly reason about any doubtful articles, then give your verdict on the
-FINAL line in exactly this format (IDs copied from the list above):
+Reason briefly (under 120 words) about doubtful members only. Then write the
+final line in exactly this format, using IDs copied from the list:
 EVICT: 12345, 67890
-or, if every article belongs:
-EVICT: NONE
-<end_of_turn>
-<start_of_turn>model
+or, if every member belongs:
+EVICT: NONE<turn|>
+<|turn>model

@@ -1,25 +1,28 @@
-<start_of_turn>user
+<|turn>user
 An EVENT is one named occurrence or process — a budget, an election, a court
 case, a scheme, a disaster, a controversy — including its reactions, analyses,
 follow-ups and consequences. An event is NOT a topic, a region, a party, or a
 rivalry between people.
 
-EVENT TITLE: {event_title}
-EVENT SCOPE: {scope}
-EVENT BEGAN: {event_began}
+<event>
+TITLE: {event_title}
+SCOPE: {scope}
+BEGAN: {event_began}
 RECENT DEVELOPMENTS: {recent_milestones}
+</event>
 
-ARTICLE DATE: {article_date}
-NEW ARTICLE: {new_title}
+<new_article>
+DATE: {article_date}
+TITLE: {new_title}
 SUMMARY: {new_summary}
+</new_article>
 
-Note: the EVENT SCOPE text lists examples of what's covered — it is not an
-exhaustive checklist. If the article is clearly a development, reaction,
-preparation, or consequence connected to the named event itself, treat it as
-in scope even if it doesn't literally match one of the listed examples.
+Note: the SCOPE text lists examples of what's covered, not an exhaustive
+checklist. If the article is clearly a development, reaction, preparation, or
+consequence connected to the named event itself, treat it as in scope even if
+it doesn't literally match one of the listed examples.
 
-Does the new article fall within this event's scope?
-Decide step by step:
+Does the new article fall within this event's scope? Decide step by step:
 1. REJECT if the article is about a genuinely different named occurrence —
    a different budget, a different court case, a different deal or scheme —
    even if it shares people, ministers, dates, or market impact with this
@@ -27,11 +30,17 @@ Decide step by step:
    themselves make it part of this event.
 2. Otherwise, ATTACH if the article reports any development, reaction,
    preparation, analysis, or consequence connected to the specific
-   occurrence named in the scope — including early/pre-event coverage and
-   follow-up sub-stories — even if it differs from earlier developments.
+   occurrence named in the scope, including early/pre-event coverage and
+   follow-up sub-stories, even if it differs from earlier developments.
 3. REJECT only if neither rule clearly applies.
 
-Give brief step-by-step reasoning first, then on the final line answer with
-just: ATTACH or REJECT
-<end_of_turn>
-<start_of_turn>model
+Examples (unrelated to the article above):
+- Event: "2025 Union Budget". Article: FM's budget speech highlights -> ATTACH
+- Event: "2025 Union Budget". Article: State budget of Kerala -> REJECT
+
+Keep your reasoning under 100 words. Then write the final line in exactly
+this format:
+ANSWER: ATTACH
+or
+ANSWER: REJECT<turn|>
+<|turn>model

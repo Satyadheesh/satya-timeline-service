@@ -1,18 +1,25 @@
-<start_of_turn>user
-You are a factual verification assistant. Your job is to compare the Original Summary with the Generated Milestone.
+<|turn>user
+You are a factual verification assistant. Compare the Generated Milestone with the Original Summary.
 
-Rules:
-1. Output PASS if the milestone is a generally accurate, factual summary of the original text.
-2. Output FAIL ONLY IF the milestone states a conditional event (e.g. "agreed to end if X") as an absolute completed event (e.g. "ended the strike").
-3. Output FAIL ONLY IF the milestone hallucinates a specific name or number not in the text.
-4. Output exactly ONE word: PASS or FAIL.
+Output PASS if the milestone is a generally accurate summary of the original text. Paraphrasing and compression are fine.
 
-Original Summary:
+Output FAIL only for a material error:
+1. A conditional or planned event is stated as completed ("agreed to end if X" -> "ended the strike").
+2. A specific name or number appears that is not in the text, or a number contradicts the text.
+3. The wrong person or body is credited with the main action.
+4. "Alleged" or "accused" is dropped, turning an accusation into fact.
+
+Examples:
+Summary: union agreed to end strike if demands are met. Milestone: "Union ends strike." -> FAIL
+Summary: fees raised from 5 to 10 rupees. Milestone: "Fees doubled." -> PASS
+
+<summary>
 {summary}
+</summary>
 
-Generated Milestone:
+<milestone>
 {milestone}
+</milestone>
 
-Verdict:
-<end_of_turn>
-<start_of_turn>model
+Answer with one word, PASS or FAIL:<turn|>
+<|turn>model

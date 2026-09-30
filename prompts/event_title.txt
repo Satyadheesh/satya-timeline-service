@@ -1,16 +1,18 @@
-<start_of_turn>user
-Generate a short, neutral, factual title representing the ongoing event described by the milestones below.
+<|turn>user
+Generate a short, neutral, factual title for the ongoing event described by the milestones below.
 
 Rules:
 1. Maximum 8 words. No quotes.
-2. Factual and neutral. Describe the core subject (e.g. "Kochi Metro Phase 2 Approval" or "Pinarayi Vijayan Ration Card Controversy").
-3. Do not use teaser, clickbait, or dramatic language.
-4. Lead with the core entity/context.
+2. Factual and neutral. Describe the core subject.
+3. No teaser, clickbait, or dramatic language.
+4. Lead with the core entity or context.
 5. Never include a year unless it appears in the milestones.
 
-Milestones:
-{milestones}
+Style examples only, unrelated to the milestones: "Kochi Metro Phase 2 Approval", "Pinarayi Vijayan Ration Card Controversy".
 
-Title:
-<end_of_turn>
-<start_of_turn>model
+<milestones>
+{milestones}
+</milestones>
+
+Output only the title.<turn|>
+<|turn>model
