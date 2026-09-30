@@ -5,8 +5,8 @@ on:
   # everything new since the checkpoint — chaining 95-min chunks via
   # self-redispatch until caught up — then rests until the next evening.
   # (~90 eligible articles/day ≈ 2-3 chunks per run.)
-  # schedule:
-  #   - cron: '30 13 * * *'
+  schedule:
+    - cron: '30 13 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
