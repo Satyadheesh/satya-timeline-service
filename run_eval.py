@@ -149,11 +149,14 @@ def run_eval(start_index=0, limit=None, output_path=None):
     with open(prompt_path, "r", encoding="utf-8") as f:
         prompt_template = f.read()
 
-    # Load Gate model (Qwen 14B)
+    # Load Gate model (Gemma 4 12B / Qwen 14B)
     model_9b_path = os.environ.get('MODEL_GATE_PATH') or os.environ.get('MODEL_9B_PATH')
     if not model_9b_path:
         # Check standard locations
         possible_paths = [
+            os.path.join(script_dir, "models", "gemma-4-12b-it-Q4_K_M.gguf"),
+            os.path.join(os.path.dirname(script_dir), "models", "gemma-4-12b-it-Q4_K_M.gguf"),
+            "./models/gemma-4-12b-it-Q4_K_M.gguf",
             os.path.join(script_dir, "models", "Qwen2.5-14B-Instruct-Q5_K_M.gguf"),
             os.path.join(os.path.dirname(script_dir), "models", "Qwen2.5-14B-Instruct-Q5_K_M.gguf"),
             "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
@@ -167,14 +170,14 @@ def run_eval(start_index=0, limit=None, output_path=None):
         print(f"Error: Gate model not found at {model_9b_path or 'any standard location'}")
         sys.exit(1)
 
-    print(f"Loading Qwen 14B model from: {model_9b_path}...")
+    print(f"Loading Gate model from: {model_9b_path}...")
     try:
         llm_9b = Llama(model_path=model_9b_path, n_ctx=2048, verbose=False)
     except Exception:
         print("\n=== FATAL: model failed to load ===")
         traceback.print_exc()
         sys.exit(3)
-    print("Qwen 14B model loaded successfully.")
+    print("Gate model loaded successfully.")
 
     # Read cases
     cases = []
@@ -229,7 +232,7 @@ def run_eval(start_index=0, limit=None, output_path=None):
 
                 t0 = time.time()
                 try:
-                    output = llm_9b(prompt, max_tokens=350, stop=["<|im_end|>"], temperature=0.0)
+                    output = llm_9b(prompt, max_tokens=350, stop=["<end_of_turn>", "<eos>", "<|im_end|>"], temperature=0.0)
                     response_text = output['choices'][0]['text'].strip()
                     # Reasoning-first prompt: the verdict is the LAST
                     # ATTACH/REJECT token in the response, not the first word.

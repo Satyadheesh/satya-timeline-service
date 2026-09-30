@@ -14,14 +14,14 @@ on:
         type: string
         default: ''
       eval_parallel:
-        description: 'Split across 20 parallel shards instead of one sequential run'
+        description: 'Split across 10 parallel shards instead of one sequential run'
         required: false
         type: boolean
-        default: false
+        default: true
 
 concurrency:
   group: satya-eval
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   # Sequential mode: one runner works through the case set (optionally
@@ -60,7 +60,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./models
-          key: qwen-14b-local-models-v3-q5km
+          key: gemma4-12b-it-v1
 
       - name: Download LLM Models
         if: steps.cache-models.outputs.cache-hit != 'true'
@@ -73,26 +73,12 @@ jobs:
           temp_cache = "./models/.hf_cache"
           os.makedirs(temp_cache, exist_ok=True)
 
-          model_2b = "./models/gemma-2-2b-it-Q4_K_M.gguf"
-          if not os.path.exists(model_2b):
-              print("Downloading Gemma 2B...")
+          model_file = "./models/gemma-4-12b-it-Q4_K_M.gguf"
+          if not os.path.exists(model_file):
+              print("Downloading Gemma 4 12B...")
               hf_hub_download(
-                  repo_id="bartowski/gemma-2-2b-it-GGUF",
-                  filename="gemma-2-2b-it-Q4_K_M.gguf",
-                  local_dir="./models",
-                  local_dir_use_symlinks=False,
-                  cache_dir=temp_cache
-              )
-              if os.path.exists(temp_cache):
-                  shutil.rmtree(temp_cache)
-                  os.makedirs(temp_cache, exist_ok=True)
-
-          model_qwen = "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
-          if not os.path.exists(model_qwen):
-              print("Downloading Qwen 14B...")
-              hf_hub_download(
-                  repo_id="bartowski/Qwen2.5-14B-Instruct-GGUF",
-                  filename="Qwen2.5-14B-Instruct-Q5_K_M.gguf",
+                  repo_id="unsloth/gemma-4-12b-it-GGUF",
+                  filename="gemma-4-12b-it-Q4_K_M.gguf",
                   local_dir="./models",
                   local_dir_use_symlinks=False,
                   cache_dir=temp_cache
@@ -103,7 +89,7 @@ jobs:
 
       - name: Run Evaluation Harness
         env:
-          MODEL_GATE_PATH: "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
+          MODEL_GATE_PATH: "./models/gemma-4-12b-it-Q4_K_M.gguf"
         run: |
           ARGS=""
           if [ -n "${{ github.event.inputs.eval_start_index }}" ]; then
@@ -186,8 +172,9 @@ jobs:
       contents: write
     strategy:
       fail-fast: false
+      max-parallel: 10
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -213,7 +200,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./models
-          key: qwen-14b-local-models-v3-q5km
+          key: gemma4-12b-it-v1
 
       - name: Download LLM Models
         if: steps.cache-models.outputs.cache-hit != 'true'
@@ -226,26 +213,12 @@ jobs:
           temp_cache = "./models/.hf_cache"
           os.makedirs(temp_cache, exist_ok=True)
 
-          model_2b = "./models/gemma-2-2b-it-Q4_K_M.gguf"
-          if not os.path.exists(model_2b):
-              print("Downloading Gemma 2B...")
+          model_file = "./models/gemma-4-12b-it-Q4_K_M.gguf"
+          if not os.path.exists(model_file):
+              print("Downloading Gemma 4 12B...")
               hf_hub_download(
-                  repo_id="bartowski/gemma-2-2b-it-GGUF",
-                  filename="gemma-2-2b-it-Q4_K_M.gguf",
-                  local_dir="./models",
-                  local_dir_use_symlinks=False,
-                  cache_dir=temp_cache
-              )
-              if os.path.exists(temp_cache):
-                  shutil.rmtree(temp_cache)
-                  os.makedirs(temp_cache, exist_ok=True)
-
-          model_qwen = "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
-          if not os.path.exists(model_qwen):
-              print("Downloading Qwen 14B...")
-              hf_hub_download(
-                  repo_id="bartowski/Qwen2.5-14B-Instruct-GGUF",
-                  filename="Qwen2.5-14B-Instruct-Q5_K_M.gguf",
+                  repo_id="unsloth/gemma-4-12b-it-GGUF",
+                  filename="gemma-4-12b-it-Q4_K_M.gguf",
                   local_dir="./models",
                   local_dir_use_symlinks=False,
                   cache_dir=temp_cache
@@ -259,7 +232,7 @@ jobs:
         run: |
           python3 -c "
           total = sum(1 for l in open('eval/eval_cases.jsonl') if l.strip())
-          shards = 20
+          shards = 10
           shard = ${{ matrix.shard }}
           per = -(-total // shards)  # ceil division so shards cover everything
           start = shard * per
@@ -270,7 +243,7 @@ jobs:
 
       - name: Run eval shard ${{ matrix.shard }}
         env:
-          MODEL_GATE_PATH: "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
+          MODEL_GATE_PATH: "./models/gemma-4-12b-it-Q4_K_M.gguf"
         run: |
           python run_eval.py \
             --start-index ${{ steps.shard-range.outputs.start }} \

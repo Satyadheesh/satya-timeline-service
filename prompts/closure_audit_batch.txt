@@ -1,4 +1,4 @@
-<|im_start|>user
+<start_of_turn>user
 You are auditing a news event archive before it is permanently sealed.
 
 An EVENT is one named occurrence or process — a budget, an election, a court
@@ -23,5 +23,5 @@ FINAL line in exactly this format (IDs copied from the list above):
 EVICT: 12345, 67890
 or, if every article belongs:
 EVICT: NONE
-<|im_end|>
-<|im_start|>assistant
+<end_of_turn>
+<start_of_turn>model
