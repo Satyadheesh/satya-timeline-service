@@ -67,7 +67,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./models
-          key: qwen-14b-local-models-v3-q5km
+          key: gemma4-12b-it-v1
 
       - name: Download LLM Models
         if: steps.cache-models.outputs.cache-hit != 'true' && github.event.inputs.dry_run != 'true'
@@ -80,28 +80,13 @@ jobs:
           temp_cache = "./models/.hf_cache"
           os.makedirs(temp_cache, exist_ok=True)
 
-          # Gemma 2B (for Milestone narration)
-          model_2b = "./models/gemma-2-2b-it-Q4_K_M.gguf"
-          if not os.path.exists(model_2b):
-              print("Downloading Gemma 2B...")
+          # Gemma 4 12B (Unified model for gate, scope, milestones, titles, saga, closure)
+          model_file = "./models/gemma-4-12b-it-Q4_K_M.gguf"
+          if not os.path.exists(model_file):
+              print("Downloading Gemma 4 12B...")
               hf_hub_download(
-                  repo_id="bartowski/gemma-2-2b-it-GGUF",
-                  filename="gemma-2-2b-it-Q4_K_M.gguf",
-                  local_dir="./models",
-                  local_dir_use_symlinks=False,
-                  cache_dir=temp_cache
-              )
-              if os.path.exists(temp_cache):
-                  shutil.rmtree(temp_cache)
-                  os.makedirs(temp_cache, exist_ok=True)
-
-          # Qwen 14B (for Attach Gate decision, Scope, Saga, Closure & Title creation)
-          model_qwen = "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
-          if not os.path.exists(model_qwen):
-              print("Downloading Qwen 14B...")
-              hf_hub_download(
-                  repo_id="bartowski/Qwen2.5-14B-Instruct-GGUF",
-                  filename="Qwen2.5-14B-Instruct-Q5_K_M.gguf",
+                  repo_id="unsloth/gemma-4-12b-it-GGUF",
+                  filename="gemma-4-12b-it-Q4_K_M.gguf",
                   local_dir="./models",
                   local_dir_use_symlinks=False,
                   cache_dir=temp_cache
@@ -115,8 +100,9 @@ jobs:
         env:
           SATYA_DB_URL: ${{ secrets.SATYA_DB_URL }}
           SATYA_DB_TOKEN: ${{ secrets.SATYA_DB_TOKEN }}
-          MODEL_2B_PATH: "./models/gemma-2-2b-it-Q4_K_M.gguf"
-          MODEL_GATE_PATH: "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
+          MODEL_PATH: "./models/gemma-4-12b-it-Q4_K_M.gguf"
+          MODEL_GATE_PATH: "./models/gemma-4-12b-it-Q4_K_M.gguf"
+          MODEL_2B_PATH: "./models/gemma-4-12b-it-Q4_K_M.gguf"
         run: |
           ARGS=""
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then

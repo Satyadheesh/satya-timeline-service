@@ -23,22 +23,17 @@ consequence connected to the named event itself, treat it as in scope even if
 it doesn't literally match one of the listed examples.
 
 Does the new article fall within this event's scope? Decide step by step:
-1. REJECT if the article is about a genuinely different named occurrence —
-   a different budget, a different court case, a different deal or scheme —
-   even if it shares people, ministers, dates, or market impact with this
-   event. Shared people, parties, sessions, or market impact do NOT by
-   themselves make it part of this event.
+1. REJECT if the article is primarily about a genuinely different named occurrence —
+   an unrelated controversy, a separate policy or scheme, or a different routine event —
+   that has no direct cause, reaction, or consequence connection to this event.
+   Shared people, parties, or dates alone do NOT by themselves make it part of this event.
 2. Otherwise, ATTACH if the article reports any development, reaction,
-   preparation, analysis, or consequence connected to the specific
-   occurrence named in the scope, including early/pre-event coverage and
-   follow-up sub-stories, even if it differs from earlier developments.
+   preparation, analysis, consequence, official action, or political fallout
+   connected to the specific occurrence named in the scope — including early coverage
+   and follow-up sub-stories — even if it appears alongside broader news.
 3. REJECT only if neither rule clearly applies.
 
-Examples (unrelated to the article above):
-- Event: "2025 Union Budget". Article: FM's budget speech highlights -> ATTACH
-- Event: "2025 Union Budget". Article: State budget of Kerala -> REJECT
-
-Keep your reasoning under 100 words. Then write the final line in exactly
+Keep your reasoning under 80 words. Then write the final line in exactly
 this format:
 ANSWER: ATTACH
 or

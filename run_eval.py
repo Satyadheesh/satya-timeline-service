@@ -235,7 +235,7 @@ def run_eval(start_index=0, limit=None, output_path=None):
                     output = llm_9b(prompt, max_tokens=350, stop=["<turn|>", "<|turn>", "<eos>", "<end_of_turn>", "<|im_end|>"], temperature=0.0)
                     raw_text = output['choices'][0]['text']
                     # Strip internal thinking/thought channels before verdict extraction
-                    cleaned_text = re.sub(r'<\|channel\|>thought.*?<channel\|>', '', raw_text, flags=re.DOTALL)
+                    cleaned_text = re.sub(r'<\|channel\|?>thought.*?<channel\|?>', '', raw_text, flags=re.DOTALL)
                     cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL).strip()
                     response_text = cleaned_text
 

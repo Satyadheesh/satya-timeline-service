@@ -63,6 +63,16 @@ class DeadlineReached(Exception):
     interrupted unit of work as not-done and it is retried on the next run."""
     pass
 
+# Gemma 4 generation constants & utilities
+GEMMA_STOP_TOKENS = ["<turn|>", "<|turn>", "<eos>", "<end_of_turn>", "<|im_end|>"]
+
+def strip_thought_channels(text):
+    if not text:
+        return ""
+    cleaned = re.sub(r'<\|channel\|?>thought.*?<channel\|?>', '', text, flags=re.DOTALL)
+    cleaned = re.sub(r'<think>.*?</think>', '', cleaned, flags=re.DOTALL)
+    return cleaned.strip()
+
 # Article eligibility filter — single source of truth (export_snapshot.py imports this).
 ELIGIBILITY_SQL = """a.status IN ('classified','entity_processed','processed')
               AND (a.category != 'international'
@@ -257,8 +267,8 @@ def generate_event_scope(llm_9b, template, title, summary):
             title=title or "Untitled Article",
             summary=summary[:1200] if summary else "No Summary Available"
         )
-        output = llm_9b(prompt, max_tokens=150, stop=["<|im_end|>"], temperature=0.0)
-        scope = output['choices'][0]['text'].strip()
+        output = llm_9b(prompt, max_tokens=150, stop=GEMMA_STOP_TOKENS, temperature=0.0)
+        scope = strip_thought_channels(output['choices'][0]['text'])
 
         if not scope:
             return None
@@ -356,10 +366,10 @@ def check_saga_links_in_memory(cursor, llm_9b, event_id, event_title, merged_key
         )
 
         logging.info(f"[SAGA CHECK] Event {event_id} vs closed Event {c_id} ({idx+1}/{len(candidates)}, {overlap} shared keys)...")
-        output = llm_9b(prompt, max_tokens=100, stop=["<|im_end|>"], temperature=0.0)
-        res_text = output['choices'][0]['text'].strip().upper()
+        output = llm_9b(prompt, max_tokens=100, stop=GEMMA_STOP_TOKENS, temperature=0.0)
+        res_text = strip_thought_channels(output['choices'][0]['text']).upper()
 
-        if res_text.startswith("SAME_SAGA"):
+        if "SAME_SAGA" in res_text and "SEPARATE" not in res_text.split("SAME_SAGA")[-1]:
             logging.info(f"[SAGA LINK MEMORY] Event {event_id} and Event {c_id} linked as SAME_SAGA.")
             linked_ids.append(c_id)
             if t_saga is None:
@@ -478,8 +488,8 @@ def get_closure_decisions(cursor, llm_9b, event_id, closure_audit_prompt_templat
                 member_lines="\n".join(chunk)
             )
             logging.info(f"[BATCH AUDIT] Event {event_id}: auditing articles {i+1}-{i+len(chunk)} of {len(member_lines_all)} in one call...")
-            output = llm_9b(prompt, max_tokens=500, stop=["<|im_end|>"], temperature=0.0)
-            res_text = output['choices'][0]['text'].strip()
+            output = llm_9b(prompt, max_tokens=500, stop=GEMMA_STOP_TOKENS, temperature=0.0)
+            res_text = strip_thought_channels(output['choices'][0]['text'])
 
             chunk_evicted, parsed_ok = parse_evict_line(res_text, valid_ids)
             if not parsed_ok:
@@ -525,7 +535,7 @@ def reframe_event(cursor, llm_9b, event_id, title_tmpl, scope_tmpl, min_articles
         # Title from the whole arc (sample across the story, not just the top)
         sample = milestones[:20]
         out = llm_9b(title_tmpl.format(milestones="\n".join(f"- {m}" for m in sample)),
-                     max_tokens=60, stop=["<|im_end|>"], temperature=0.0)
+                     max_tokens=60, stop=GEMMA_STOP_TOKENS, temperature=0.0)
         new_title = clean_title(out['choices'][0]['text'])
         if not new_title:
             return
@@ -577,21 +587,25 @@ def load_models(dry_run=False):
     logging.info("Loading sentence-transformers/all-MiniLM-L6-v2...")
     encoder = SentenceTransformer('all-MiniLM-L6-v2')
 
-    model_2b_path = os.environ.get('MODEL_2B_PATH', './models/gemma-2-2b-it-Q4_K_M.gguf')
-    model_9b_path = os.environ.get('MODEL_GATE_PATH') or os.environ.get('MODEL_9B_PATH', './models/Qwen2.5-14B-Instruct-Q5_K_M.gguf')
+    model_path = os.environ.get('MODEL_GATE_PATH') or os.environ.get('MODEL_PATH') or os.environ.get('MODEL_9B_PATH') or os.environ.get('MODEL_2B_PATH')
+    if not model_path or not os.path.exists(model_path):
+        possible_paths = [
+            "./models/gemma-4-12b-it-Q4_K_M.gguf",
+            os.path.join(os.path.dirname(__file__), "models", "gemma-4-12b-it-Q4_K_M.gguf"),
+            "./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf"
+        ]
+        for p in possible_paths:
+            if os.path.exists(p):
+                model_path = p
+                break
 
-    if not os.path.exists(model_2b_path):
-        raise FileNotFoundError(f"Gemma 2B model not found at {model_2b_path}")
-    if not os.path.exists(model_9b_path):
-        raise FileNotFoundError(f"Gate model not found at {model_9b_path}")
+    if not model_path or not os.path.exists(model_path):
+        raise FileNotFoundError(f"Unified model not found at {model_path or 'standard paths'}")
 
-    logging.info(f"Loading Gemma 2B from {model_2b_path}...")
-    llm_2b = Llama(model_path=model_2b_path, n_ctx=2048, verbose=False)
+    logging.info(f"Loading unified Gemma 4 12B model from {model_path}...")
+    llm = Llama(model_path=model_path, n_ctx=2048, verbose=False)
 
-    logging.info(f"Loading Qwen 14B from {model_9b_path}...")
-    llm_9b = Llama(model_path=model_9b_path, n_ctx=2048, verbose=False)
-
-    return encoder, llm_2b, llm_9b
+    return encoder, llm, llm
 
 def unique_slug(cursor, slug, event_id):
     """Slug that no OTHER event uses. Different stories often get the same
@@ -630,21 +644,22 @@ def numbers_grounded(text, *sources):
     return True, None
 
 def clean_title(raw):
-    """Sanitize a generated event title. Qwen sometimes appends its reasoning
-    in Chinese after the title ('...Oath Delay争议点在于...'), and spaceless CJK
-    counts as ~1 'word', slipping past the word-count check. Keep only the
-    first line, cut at the first non-Latin character, and require a sane
-    result — otherwise return None (title regenerates on a later attach)."""
+    """Sanitize a generated event title. Strip thought channels and internal reasoning,
+    keep only the first line, enforce 3 to 8 words, and cut non-Latin characters."""
     if not raw:
         return None
-    title = raw.strip().strip('"').strip("'").splitlines()[0]
+    raw = strip_thought_channels(raw)
+    lines = [line.strip().strip('"').strip("'") for line in raw.splitlines() if line.strip()]
+    if not lines:
+        return None
+    title = lines[0]
     # Cut at the first character outside basic Latin + common punctuation
     m = re.search(r'[^\x20-\x7E‘’“”–—]', title)
     if m:
         title = title[:m.start()]
     title = title.strip(' -–—:;,.')
     words = title.split()
-    if len(words) < 3 or len(words) > 12:
+    if len(words) < 3 or len(words) > 8:
         return None
     return title
 
@@ -847,8 +862,8 @@ def run_null_milestone_sweep(conn, llm_2b, llm_9b, milestone_prompt_template, ve
                 title=title or '',
                 summary=content[:1200]
             )
-            output = llm_2b(prompt, max_tokens=100, stop=["<end_of_turn>"], temperature=0.1 + (0.15 * attempt))
-            gen_milestone = output['choices'][0]['text'].strip()
+            output = llm_2b(prompt, max_tokens=100, stop=GEMMA_STOP_TOKENS, temperature=0.1 + (0.15 * attempt))
+            gen_milestone = strip_thought_channels(output['choices'][0]['text'])
 
             words = gen_milestone.split()
             valid = True
@@ -865,8 +880,8 @@ def run_null_milestone_sweep(conn, llm_2b, llm_9b, milestone_prompt_template, ve
                     summary=content[:1200],
                     milestone=gen_milestone
                 )
-                verify_out = llm_2b(verify_prompt, max_tokens=10, stop=["<end_of_turn>"], temperature=0.0)
-                verdict = verify_out['choices'][0]['text'].strip().upper()
+                verify_out = llm_2b(verify_prompt, max_tokens=10, stop=GEMMA_STOP_TOKENS, temperature=0.0)
+                verdict = strip_thought_channels(verify_out['choices'][0]['text']).upper()
                 if "FAIL" in verdict:
                     valid = False
 
@@ -879,8 +894,8 @@ def run_null_milestone_sweep(conn, llm_2b, llm_9b, milestone_prompt_template, ve
                         title=title or '',
                         summary=content[:1200]
                     )
-                    fb_out = llm_9b(fallback_prompt, max_tokens=100, stop=["<end_of_turn>", "<|im_end|>"], temperature=0.1)
-                    fallback_milestone = fb_out['choices'][0]['text'].strip()
+                    fb_out = llm_9b(fallback_prompt, max_tokens=100, stop=GEMMA_STOP_TOKENS, temperature=0.1)
+                    fallback_milestone = strip_thought_channels(fb_out['choices'][0]['text'])
                     if fallback_milestone.startswith('"') and fallback_milestone.endswith('"'):
                         fallback_milestone = fallback_milestone[1:-1]
                     milestone = fallback_milestone
@@ -1049,9 +1064,9 @@ def main():
                 article_title=art_title,
                 milestone=art_milestone
             )
-            output = llm_9b(prompt, max_tokens=100, stop=["<|im_end|>"], temperature=0.0)
-            response_text = output['choices'][0]['text'].strip()
-            decision = "KEEP" if not response_text.upper().startswith("EVICT") else "EVICT"
+            output = llm_9b(prompt, max_tokens=100, stop=GEMMA_STOP_TOKENS, temperature=0.0)
+            response_text = strip_thought_channels(output['choices'][0]['text'])
+            decision = "EVICT" if "EVICT" in response_text.upper() else "KEEP"
             
             if decision == "KEEP":
                 keep_count += 1
@@ -1434,10 +1449,24 @@ def main():
                     # word). One bad article must not crash the whole batch —
                     # fail-safe to REJECT (new event) and keep going.
                     try:
-                        output = llm_9b(prompt, max_tokens=350, stop=["<|im_end|>"], temperature=0.0)
-                        response_text = output['choices'][0]['text'].strip()
-                        verdict_matches = re.findall(r'\b(ATTACH|REJECT)\b', response_text.upper())
-                        vote = verdict_matches[-1] if verdict_matches else "REJECT"
+                        output = llm_9b(prompt, max_tokens=350, stop=GEMMA_STOP_TOKENS, temperature=0.0)
+                        raw_text = output['choices'][0]['text']
+                        response_text = strip_thought_channels(raw_text)
+
+                        # Strict last-line parser: look for ANSWER: ATTACH or ANSWER: REJECT
+                        vote = "REJECT"  # safe default
+                        matched = False
+                        for line in reversed(response_text.splitlines()):
+                            line_clean = line.strip().upper()
+                            m = re.search(r'ANSWER:\s*(ATTACH|REJECT)', line_clean)
+                            if m:
+                                vote = m.group(1)
+                                matched = True
+                                break
+                        if not matched:
+                            verdict_matches = re.findall(r'\b(ATTACH|REJECT)\b', response_text.upper())
+                            if verdict_matches:
+                                vote = verdict_matches[-1]
                     except Exception as gate_err:
                         response_text = ""
                         vote = "REJECT"
@@ -1487,8 +1516,8 @@ def main():
                             title=orig_title,
                             summary=decompressed_article[:1200]
                         )
-                        output = llm_2b(prompt, max_tokens=100, stop=["<end_of_turn>"], temperature=0.1 + (0.15 * attempt))
-                        gen_milestone = output['choices'][0]['text'].strip()
+                        output = llm_2b(prompt, max_tokens=100, stop=GEMMA_STOP_TOKENS, temperature=0.1 + (0.15 * attempt))
+                        gen_milestone = strip_thought_channels(output['choices'][0]['text'])
 
                         # Validate milestone (max 30 words, no quotes, numbers grounded)
                         words = gen_milestone.split()
@@ -1502,14 +1531,14 @@ def main():
                             valid = False
                             logging.info(f"  Milestone rejected: hallucinated number '{bad_num}' not in source.")
 
-                        # Verification using 2B Model (Critic)
+                        # Verification using Model (Critic)
                         if valid:
                             verify_prompt = verify_milestone_prompt_template.format(
                                 summary=decompressed_article[:1200],
                                 milestone=gen_milestone
                             )
-                            verify_out = llm_2b(verify_prompt, max_tokens=10, stop=["<end_of_turn>"], temperature=0.0)
-                            verdict = verify_out['choices'][0]['text'].strip().upper()
+                            verify_out = llm_2b(verify_prompt, max_tokens=10, stop=GEMMA_STOP_TOKENS, temperature=0.0)
+                            verdict = strip_thought_channels(verify_out['choices'][0]['text']).upper()
                             if "FAIL" in verdict:
                                 valid = False
                                 logging.info(f"  Milestone validation failed (Critic rejected Attempt {attempt+1}/{MAX_RETRIES}): '{gen_milestone}'")
@@ -1520,13 +1549,13 @@ def main():
                             break
                         else:
                             if attempt == MAX_RETRIES - 1:
-                                logging.info(f"  Milestone validation failed after {MAX_RETRIES} attempts. Falling back to 14B model.")
+                                logging.info(f"  Milestone validation failed after {MAX_RETRIES} attempts. Falling back to retry.")
                                 fallback_prompt = milestone_prompt_template.format(
                                     title=orig_title,
                                     summary=decompressed_article[:1200]
                                 )
-                                fb_out = llm_9b(fallback_prompt, max_tokens=100, stop=["<end_of_turn>", "<|im_end|>"], temperature=0.1)
-                                fallback_milestone = fb_out['choices'][0]['text'].strip()
+                                fb_out = llm_9b(fallback_prompt, max_tokens=100, stop=GEMMA_STOP_TOKENS, temperature=0.1)
+                                fallback_milestone = strip_thought_channels(fb_out['choices'][0]['text'])
                                 if fallback_milestone.startswith('"') and fallback_milestone.endswith('"'):
                                     fallback_milestone = fallback_milestone[1:-1]
                                 milestone = fallback_milestone
@@ -1558,7 +1587,7 @@ def main():
                             all_ms = [reph_title]
                         
                         title_prompt = title_prompt_template.format(milestones="\n".join(f"- {m}" for m in all_ms))
-                        title_out = llm_9b(title_prompt, max_tokens=60, stop=["<|im_end|>"], temperature=0.0)
+                        title_out = llm_9b(title_prompt, max_tokens=60, stop=GEMMA_STOP_TOKENS, temperature=0.0)
                         gen_title = clean_title(title_out['choices'][0]['text'])
 
                         if gen_title:
