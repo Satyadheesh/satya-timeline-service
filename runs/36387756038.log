@@ -1,431 +1,0 @@
-2026-09-28 06:48:14,018 - INFO - Internal runtime timer active: soft deadline set for 08:58:13 UTC (max 130 mins).
-2026-09-28 06:48:14,018 - INFO - Pipeline started. dry_run=False, batch_size=200, sim_threshold=0.6
-2026-09-28 06:48:14,027 - INFO - Connecting to remote Turso Database at: libsql://satya-db-yashveer0723.aws-ap-south-1.turso.io
-2026-09-28 06:48:15,240 - INFO - Loaded cursor from DB. Last processed article ID: 119792
-2026-09-28 06:48:15,240 - INFO - Fetching up to 200 articles after cursor (id 119792)...
-2026-09-28 06:48:27,535 - INFO - Loading sentence-transformers/all-MiniLM-L6-v2...
-2026-09-28 06:48:27,536 - INFO - No device provided, using cpu
-2026-09-28 06:48:27,644 - INFO - HTTP Request: GET https://huggingface.co/api/agent-harnesses "HTTP/1.1 200 OK"
-2026-09-28 06:48:27,718 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-2026-09-28 06:48:27,719 - WARNING - Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-2026-09-28 06:48:27,723 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:27,730 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:27,807 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:27,812 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:27,817 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:27,818 - INFO - Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
-2026-09-28 06:48:27,895 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:27,900 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:27,975 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:27,981 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2FREADME.md=&etag=%2244af2e3b0fa3a0b6239e48422972bf755f28fde0%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:27,986 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2FREADME.md=&etag=%2244af2e3b0fa3a0b6239e48422972bf755f28fde0%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:28,061 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:28,067 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:28,142 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:28,149 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fsentence_bert_config.json=&etag=%2259d594003bf59880a884c574bf88ef7555bb0202%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:28,154 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fsentence_bert_config.json=&etag=%2259d594003bf59880a884c574bf88ef7555bb0202%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:28,233 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
-2026-09-28 06:48:28,310 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:28,315 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:28,320 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:28,441 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/model.safetensors "HTTP/1.1 302 Found"
-2026-09-28 06:48:28,534 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/xet-read-token/1110a243fdf4706b3f48f1d95db1a4f5529b4d41 "HTTP/1.1 200 OK"
-Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 3287.65it/s]
-2026-09-28 06:48:30,055 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
-2026-09-28 06:48:30,143 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-28 06:48:30,219 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-28 06:48:30,295 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-28 06:48:30,368 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:30,374 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:30,379 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:30,453 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:30,458 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:30,544 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:30,550 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:30,628 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:30,633 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:30,714 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
-2026-09-28 06:48:30,795 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
-2026-09-28 06:48:30,869 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/vocab.txt "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:30,875 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fvocab.txt=&etag=%22fb140275c155a9c7c5a3b3e0e77a9e839594a938%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:30,880 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fvocab.txt=&etag=%22fb140275c155a9c7c5a3b3e0e77a9e839594a938%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:30,957 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:30,963 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer.json=&etag=%22cb202bfe2e3c98645018a6d12f182a434c9d3e02%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:30,968 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer.json=&etag=%22cb202bfe2e3c98645018a6d12f182a434c9d3e02%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:31,046 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
-2026-09-28 06:48:31,121 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/special_tokens_map.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:31,127 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/special_tokens_map.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fspecial_tokens_map.json=&etag=%22e7b0375001f109a6b8873d756ad4f7bbb15fbaa5%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:31,132 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/special_tokens_map.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fspecial_tokens_map.json=&etag=%22e7b0375001f109a6b8873d756ad4f7bbb15fbaa5%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:31,210 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
-2026-09-28 06:48:31,323 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-28 06:48:31,328 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2F1_Pooling%2Fconfig.json=&etag=%22d1514c3162bbe87b343f565fadc62e6c06f04f03%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:31,334 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2F1_Pooling%2Fconfig.json=&etag=%22d1514c3162bbe87b343f565fadc62e6c06f04f03%22 "HTTP/1.1 200 OK"
-2026-09-28 06:48:31,416 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/2_Normalize/config.json "HTTP/1.1 404 Not Found"
-2026-09-28 06:48:31,494 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
-2026-09-28 06:48:31,512 - INFO - Loading Gemma 2B from ./models/gemma-2-2b-it-Q4_K_M.gguf...
-llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
-2026-09-28 06:48:33,245 - INFO - Loading Qwen 14B from ./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf...
-2026-09-28 06:49:00,203 - INFO - 
-Running chapter closure sweep relative to logical clock cutoff: 1787197862...
-2026-09-28 06:49:01,559 - INFO - Found 5 events to close (closure budget until 07:40:13).
-2026-09-28 06:49:01,559 - INFO - Closing Event ID 11650...
-2026-09-28 06:49:03,857 - INFO - Event ID 11650 closed successfully.
-2026-09-28 06:49:03,858 - INFO - Closing Event ID 11651...
-2026-09-28 06:49:06,176 - INFO - Event ID 11651 closed successfully.
-2026-09-28 06:49:06,176 - INFO - Closing Event ID 11652...
-2026-09-28 06:49:08,459 - INFO - Event ID 11652 closed successfully.
-2026-09-28 06:49:08,459 - INFO - Closing Event ID 11655...
-2026-09-28 06:49:10,802 - INFO - Event ID 11655 closed successfully.
-2026-09-28 06:49:10,802 - INFO - Closing Event ID 11656...
-2026-09-28 06:49:13,079 - INFO - Event ID 11656 closed successfully.
-2026-09-28 06:49:13,079 - INFO - 
-Checking for historical NULL milestones to backfill...
-2026-09-28 06:49:13,775 - INFO - Running NULL milestone sweep for 20 articles...
-2026-09-28 06:54:43,332 - INFO - Successfully backfilled 20 NULL milestones.
-2026-09-28 06:54:46,839 - INFO - Loaded 596 candidate events (0 recently-closed, reopenable).
-2026-09-28 06:54:46,840 - INFO - 
-Processing article ID 119804: 'Trump predicts Iran war will end post-midterms, oil prices to drop'
-2026-09-28 06:54:46,841 - INFO -   Entities: ['congress']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.69it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.68it/s]
-2026-09-28 06:54:47,191 - INFO -   Best similarity match: 0.7219 with Event ID 10877
-2026-09-28 06:58:57,818 - INFO - Nomination: article_id=119804, event_id=10877, cosine=0.7219, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is not about a genuinely different named occurrence. It is still discussing the same event of US-Iran tensions and the decision to pause an attack and pursue negotiations.
-2. The article reports a development connected to the specific occurrence named in the scope. It discusses President Trump's prediction that the war with Iran will end after the midterm elections and his comments on oil prices, which are direct consequences of the ongoing tensions and negotiations.
-3. The article clearly falls within the scope of the event as it provides a direct update on the status of the conflict and negotiations.
-
-Final answer: ATTACH
-2026-09-28 06:58:57,818 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-28 06:59:11,341 - INFO -   Generated Milestone (Attempt 1): 'US President Trump predicts the Iran war will end after the November midterm elections, citing Tehran's inability to sustain the conflict.'
-2026-09-28 06:59:14,200 - INFO -   Attached to Event ID 10877 successfully.
-2026-09-28 06:59:14,201 - INFO - 
-Processing article ID 119813: 'Putin cheers Europe’s far right rise, threatening EU unity on Russia'
-2026-09-28 06:59:14,201 - INFO -   Entities: ['narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 23.20it/s]
-2026-09-28 06:59:14,248 - INFO -   Best similarity match: 0.4187 with Event ID 12027
-2026-09-28 07:00:53,951 - INFO -   Generated Event Scope: 'This event covers Vladimir Putin's celebration of gains by Europe’s far-right parties at the Shanghai Cooperation Organisation summit, including reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions by Vladimir Putin, European far-right parties, and related entities unless they are direct developments or consequences of this particular celebration and the political shifts it highlights.'
-2026-09-28 07:00:56,246 - INFO -   Created new invisible Event ID 12224.
-2026-09-28 07:00:56,247 - INFO - 
-Processing article ID 119814: 'Gadkari vows to blacklist record contractors over Mumbai-Goa highway delays'
-2026-09-28 07:00:56,247 - INFO -   Entities: ['mumbai', 'maharashtra', 'nitin_gadkari', 'goa']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 26.44it/s]
-2026-09-28 07:00:56,289 - INFO -   Best similarity match: 0.4841 with Event ID 12085
-2026-09-28 07:02:43,115 - INFO -   Generated Event Scope: 'This event covers the warning and actions announced by Nitin Gadkari, Union road transport and highways minister, regarding the delays in the Mumbai-Goa highway widening project, including any reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions or statements made by Gadkari or related parties unless they are direct developments or consequences of the warning and actions concerning the Mumbai-Goa highway delays.'
-2026-09-28 07:02:45,553 - INFO -   Created new invisible Event ID 12225.
-2026-09-28 07:02:45,554 - INFO - 
-Processing article ID 119819: 'AI Giant Anthropic Faces Dissent Over Unsafe Hacking Incident'
-2026-09-28 07:02:45,554 - INFO -   Entities: ['congress']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 34.12it/s]
-2026-09-28 07:02:45,587 - INFO -   Best similarity match: 0.5107 with Event ID 12076
-2026-09-28 07:04:10,924 - INFO -   Generated Event Scope: 'This event covers the fourth AI hacking incident involving Claude Opus 4.6 by Anthropic, including reactions, analyses, and follow-up developments related to the incident and internal dissent over safety concerns. It excludes other actions or incidents involving Anthropic or related parties unless they are direct developments or consequences of this specific hacking incident.'
-2026-09-28 07:04:12,847 - INFO -   Created new invisible Event ID 12226.
-2026-09-28 07:04:12,847 - INFO - 
-Processing article ID 119827: 'G20 Sherpa Urges China to Open Market for BRICS, Emphasizing Clean Tech Benefits'
-2026-09-28 07:04:12,848 - INFO -   Entities: ['delhi', 'narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 30.38it/s]
-2026-09-28 07:04:12,884 - INFO -   Best similarity match: 0.4469 with Event ID 10737
-2026-09-28 07:05:50,608 - INFO -   Generated Event Scope: 'This event covers the specific occurrence where former G20 Sherpa Amitabh Kant urged China to open its market to BRICS nations, including reactions, analyses, and follow-up developments of this call. It excludes other actions by Amitabh Kant, China, or BRICS nations unless they are direct developments of this particular call for market openness and cooperation in clean technologies.'
-2026-09-28 07:05:53,082 - INFO -   Created new invisible Event ID 12227.
-2026-09-28 07:05:53,082 - INFO - 
-Processing article ID 119841: 'Naidu Rejects CBI Probe Demand, Questions Lack of Evidence in Teacher Recruitment Row'
-2026-09-28 07:05:53,083 - INFO -   Entities: ['chandrababu_naidu']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 26.15it/s]
-2026-09-28 07:05:53,124 - INFO -   Best similarity match: 0.5797 with Event ID 11922
-2026-09-28 07:07:45,983 - INFO -   Generated Event Scope: 'This event covers Chief Minister N Chandrababu Naidu's rejection of the Opposition's demand for a CBI probe into alleged irregularities in the Mega DSC 2025 teacher recruitment drive, including any reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions by Naidu, the Opposition, or related parties unless they are direct developments or responses to the specific demand for a CBI probe and the recruitment row.'
-2026-09-28 07:07:48,653 - INFO -   Created new invisible Event ID 12228.
-2026-09-28 07:07:48,653 - INFO - 
-Processing article ID 119896: 'On September 12, President Xi Jinping of China will attend the BRICS'
-2026-09-28 07:07:48,653 - INFO -   Entities: ['narendra_modi', 'delhi', 'arunachal_pradesh', 'ladakh', 'chennai']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 32.18it/s]
-2026-09-28 07:07:48,688 - INFO -   Best similarity match: 0.8936 with Event ID 10737
-2026-09-28 07:11:57,895 - INFO - Nomination: article_id=119896, event_id=10737, cosine=0.8936, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is about President Xi Jinping's attendance at the BRICS Summit in New Delhi, which is the same named occurrence as specified in the EVENT SCOPE. It does not describe a different event or occurrence.
-2. The article reports on developments directly related to the BRICS Summit, including Xi Jinping's visit, his aim to meet with Indian Prime Minister Narendra Modi, and the purpose of the visit to address trade issues and normalize relations. These are all connected to the specific occurrence named in the scope.
-3. The article clearly falls within the scope of the BRICS Summit event, as it discusses the attendance and activities of key figures directly related to the summit.
-
-Final answer: ATTACH
-2026-09-28 07:11:57,895 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-28 07:12:12,768 - INFO -   Generated Milestone (Attempt 1): 'President Xi Jinping will visit India for the first time since 2019 to discuss trade issues and normalize strained relations.'
-2026-09-28 07:12:15,366 - INFO -   Attached to Event ID 10737 successfully.
-2026-09-28 07:12:15,367 - INFO - 
-Processing article ID 119904: 'On Thursday, D.K'
-2026-09-28 07:12:15,367 - INFO -   Entities: ['karnataka', 'telangana', 'andhra_pradesh', 'siddaramaiah', 'bengaluru']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 34.73it/s]
-2026-09-28 07:12:15,399 - INFO -   Best similarity match: 0.5373 with Event ID 10064
-2026-09-28 07:13:59,064 - INFO -   Generated Event Scope: 'This event covers the unveiling of several initiatives by D.K. Shivakumar, including the Seva One platform and BMTC 2.0 app, along with other schemes, and includes reactions, analyses, and follow-up developments related to these specific actions. It excludes other actions or initiatives by D.K. Shivakumar, the Karnataka government, or related parties unless they are direct developments or consequences of the initiatives announced on this occasion.'
-2026-09-28 07:14:01,420 - INFO -   Created new invisible Event ID 12229.
-2026-09-28 07:14:01,420 - INFO - 
-Processing article ID 119906: 'AMMK Chief Dhinakaran Calls Tamil Nadu CM Vijay a "Villain" Over Mocking Stalin's Injury'
-2026-09-28 07:14:01,420 - INFO -   Entities: ['dmk', 'cpm', 'mk_stalin', 'tamil_nadu']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 29.29it/s]
-2026-09-28 07:14:01,457 - INFO -   Best similarity match: 0.7772 with Event ID 9418
-2026-09-28 07:18:42,586 - INFO - Nomination: article_id=119906, event_id=9418, cosine=0.7772, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is not about a genuinely different named occurrence. It is still centered around the political conflict involving Tamil Nadu Chief Minister C. Joseph Vijay and his interactions with other political figures, specifically the DMK and AMMK parties.
-2. The article reports a development connected to the specific occurrence named in the scope. It details criticism from AMMK chief TTV Dhinakaran towards Tamil Nadu Chief Minister Vijay, which is a direct reaction to the political row that began with the arrest of DMK MLA Anitha R. Radhakrishnan and the subsequent actions and statements by Vijay.
-3. The article clearly falls within the scope of the event as it is a direct reaction and development stemming from the initial arrest and the political crisis that ensued.
-
-Final answer: ATTACH
-2026-09-28 07:18:42,586 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-28 07:18:59,011 - INFO -   Generated Milestone (Attempt 1): 'TTV Dhinakaran escalated a political row by accusing Tamil Nadu Chief Minister Vijay of being a "villain" after Vijay allegedly mocked DMK leader MK Stalin's jaw injury.'
-2026-09-28 07:19:01,416 - INFO -   Attached to Event ID 9418 successfully.
-2026-09-28 07:19:01,417 - INFO - 
-Processing article ID 119914: 'Delhi court orders money laundering charges against Lalu Prasad Yadav, son, wife'
-2026-09-28 07:19:01,417 - INFO -   Entities: ['upa', 'delhi', 'ranchi', 'rjd', 'patna']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 24.57it/s]
-2026-09-28 07:19:01,461 - INFO -   Best similarity match: 0.5861 with Event ID 11705
-2026-09-28 07:21:28,412 - INFO -   Generated Event Scope: 'This event covers the Delhi court's decision on September 10, 2026, to frame money laundering charges against Lalu Prasad Yadav, his wife Rabri Devi, his son Tejashwi Prasad Yadav, and six others in the Enforcement Directorate’s case regarding the alleged IRCTC scam, including any reactions, analyses, and follow-up developments related to this specific court order. It excludes other actions or legal proceedings involving Lalu Prasad Yadav, his wife, his son, or the Enforcement Directorate unless they are direct developments or consequences of this specific court order.'
-2026-09-28 07:21:31,048 - INFO -   Created new invisible Event ID 12230.
-2026-09-28 07:21:31,049 - INFO - 
-Processing article ID 119915: 'Delhi court orders charges against Lalu Prasad Yadav, son in IRCTC hotel scam'
-2026-09-28 07:21:31,049 - INFO -   Entities: ['delhi', 'rjd', 'patna', 'ranchi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 28.16it/s]
-2026-09-28 07:21:31,088 - INFO -   Best similarity match: 0.8751 with Event ID 12230
-2026-09-28 07:26:23,771 - INFO - Nomination: article_id=119915, event_id=12230, cosine=0.8751, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The new article is about a specific court order on September 10, 2026, regarding money laundering charges against Lalu Prasad Yadav, his wife Rabri Devi, his son Tejashwi Prasad Yadav, and six others in the IRCTC scam case. This matches the named occurrence in the event scope, which is the Delhi court's decision to frame money laundering charges against the same individuals in the same case.
-2. The article reports on the development of the court's decision, including the discharge of seven out of 16 accused and the framing of charges against the remaining individuals and Lara Projects LLP. This is a direct development connected to the specific occurrence named in the event scope.
-3. The article does not discuss any genuinely different named occurrence, such as a different court case or a different deal or scheme. It is clearly a development connected to the specific court order mentioned in the event scope.
-
-Final answer: ATTACH
-2026-09-28 07:26:23,771 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-28 07:26:41,115 - INFO -   Generated Milestone (Attempt 1): 'A Delhi court ordered the framing of money laundering charges against Lalu Prasad Yadav, Rabri Devi, Tejashwi Yadav, and six others in an alleged IRCTC hotel scam.'
-2026-09-28 07:27:39,033 - INFO -   Generated Event Title: 'Delhi Court Frames Money Laundering Charges in IRCTC Scam' | slug: delhi-court-frames-money-laundering-charges-in-irctc-scam
-2026-09-28 07:27:45,620 - INFO - [SAGA CHECK] Event 12230: 64 candidates share >=2 keys; capped to 8 strongest.
-2026-09-28 07:27:46,102 - INFO - [SAGA CHECK] Event 12230 vs closed Event 1107 (1/8, 4 shared keys)...
-2026-09-28 07:30:06,150 - INFO - [SAGA LINK MEMORY] Event 12230 and Event 1107 linked as SAME_SAGA.
-2026-09-28 07:30:07,127 - INFO - [SAGA CHECK] Event 12230 vs closed Event 9378 (2/8, 3 shared keys)...
-2026-09-28 07:32:04,258 - INFO - [SAGA CHECK] Event 12230 vs closed Event 10510 (3/8, 3 shared keys)...
-2026-09-28 07:33:57,825 - INFO - [SAGA CHECK] Event 12230 vs closed Event 8133 (4/8, 3 shared keys)...
-2026-09-28 07:35:55,813 - INFO - [SAGA CHECK] Event 12230 vs closed Event 6366 (5/8, 3 shared keys)...
-2026-09-28 07:37:49,490 - INFO - [SAGA CHECK] Event 12230 vs closed Event 5606 (6/8, 3 shared keys)...
-2026-09-28 07:39:44,950 - INFO - [SAGA CHECK] Event 12230 vs closed Event 4976 (7/8, 3 shared keys)...
-2026-09-28 07:41:43,192 - INFO - [SAGA CHECK] Event 12230 vs closed Event 290 (8/8, 3 shared keys)...
-2026-09-28 07:43:47,064 - INFO -   Attached to Event ID 12230 successfully.
-2026-09-28 07:43:47,064 - INFO - 
-Processing article ID 119916: 'BJP launches "Nasha Mukt Punjab Yatra" with five rallies, targeting three crore people'
-2026-09-28 07:43:47,064 - INFO -   Entities: ['bjp', 'aap', 'punjab', 'amit_shah']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 26.83it/s]
-2026-09-28 07:43:47,105 - INFO -   Best similarity match: 0.6252 with Event ID 11997
-2026-09-28 07:49:14,890 - INFO - Nomination: article_id=119916, event_id=11997, cosine=0.6252, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The new article is about the BJP launching a campaign called "Nasha Mukt Punjab Yatra" to address drug abuse in Punjab. This is a new initiative by the BJP, not a continuation or reaction to the specific "Yudh Nasheyan Virudh" campaign issued by Sri Akal Takht Sahib Jathedar Giani Kuldeep Singh Gargajj. However, both events are related to the same issue of drug abuse in Punjab.
-2. The article does report a development related to addressing drug abuse in Punjab, which is connected to the broader issue covered by the "Yudh Nasheyan Virudh" campaign. The BJP's campaign can be seen as a response to the challenge issued by Sri Akal Takht Sahib Jathedar Giani Kuldeep Singh Gargajj, as it aims to tackle the same problem.
-3. Since the BJP's campaign is a direct response to the challenge issued by Sri Akal Takht Sahib Jathedar Giani Kuldeep Singh Gargajj, it falls within the scope of the event as it is a development connected to the specific occurrence named in the scope.
-
-Final answer: ATTACH
-2026-09-28 07:49:14,890 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-28 07:49:31,654 - INFO -   Generated Milestone (Attempt 1): 'The BJP will launch the "Nasha Mukt Punjab Yatra" with five rallies and a pledge-signing campaign to address drug abuse and reach nearly three crore people in Punjab.'
-2026-09-28 07:49:34,264 - INFO -   Attached to Event ID 11997 successfully.
-2026-09-28 07:49:34,264 - INFO - 
-Processing article ID 119919: 'Mumbai Police Tensions Rise as Protests Loom During Ganesh Utsav Festival'
-2026-09-28 07:49:34,265 - INFO -   Entities: ['mumbai', 'devendra_fadnavis']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 30.58it/s]
-2026-09-28 07:49:34,300 - INFO -   Best similarity match: 0.4834 with Event ID 11877
-2026-09-28 07:51:19,490 - INFO -   Generated Event Scope: 'This event covers the planned protests during the Ganesh Utsav festival in Mumbai, including reactions, analyses, and follow-up developments related to the protests and the Mumbai Police's response. It excludes other actions by Manoj Jarange Patil, Sakal Adivasi Vidyarthi Andolan, and the Mumbai Police unless they are direct developments of the planned protests during the Ganesh Utsav festival.'
-2026-09-28 07:51:21,914 - INFO -   Created new invisible Event ID 12231.
-2026-09-28 07:51:21,915 - INFO - 
-Processing article ID 119926: 'India Russia Expand Talks on Manufacturing IL-114 SSJ100 in India'
-2026-09-28 07:51:21,915 - INFO -   Entities: ['kerala', 'delhi', 'chandrababu_naidu']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 32.63it/s]
-2026-09-28 07:51:21,949 - INFO -   Best similarity match: 0.5364 with Event ID 11758
-2026-09-28 07:53:11,183 - INFO -   Generated Event Scope: 'This event covers the expanded discussions between India and Russia on manufacturing the IL-114 and Sukhoi Superjet 100 planes in India, including any reactions, analyses, and follow-up developments related to these talks. It excludes other actions by India, Russia, Hindustan Aeronautics Limited, or any other parties involved, unless they are direct developments of this specific occurrence.'
-2026-09-28 07:53:13,781 - INFO -   Created new invisible Event ID 12232.
-2026-09-28 07:53:13,782 - INFO - 
-Processing article ID 119979: 'At an event in Thiruvananthapuram on Thursday, Brinda Karat criticized the Congress'
-2026-09-28 07:53:13,782 - INFO -   Entities: ['kerala', 'narendra_modi', 'congress', 'rahul_gandhi', 'bjp', 'pinarayi_vijayan', 'cpi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 27.76it/s]
-2026-09-28 07:53:13,822 - INFO -   Best similarity match: 0.6335 with Event ID 11700
-2026-09-28 07:57:26,699 - INFO - Nomination: article_id=119979, event_id=11700, cosine=0.6335, vote=REJECT | Raw: Step-by-step reasoning:
-
-1. The new article is about Brinda Karat criticizing the Congress party and questioning the KPCC president Sunny Joseph about the ED's actions targeting opposition leaders, including those from Congress. This is a different named occurrence from K. Annamalai's criticism of the Central government for favoring Gujarat and the subsequent reactions and analyses from Opposition leaders in Kerala and BJP representatives.
-2. Since the article is about a genuinely different named occurrence, it does not fall under the scope of the event defined by K. Annamalai's criticism and its aftermath.
-3. Therefore, the article should be rejected as it does not report any development, reaction, preparation, analysis, or consequence connected to the specific occurrence named in the scope of the event.
-
-REJECT
-2026-09-28 07:57:26,699 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-28 07:59:19,430 - INFO -   Generated Event Scope: 'This event covers Brinda Karat's criticism of the Congress party at an event in Thiruvananthapuram on Thursday, including any reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions by Brinda Karat, the Congress party, or events in Thiruvananthapuram unless they are direct developments of this specific occurrence.'
-2026-09-28 07:59:22,058 - INFO -   Created new invisible Event ID 12233.
-2026-09-28 07:59:22,058 - INFO - 
-Processing article ID 119990: 'Labourer's Suicide Sparks BJP-AAP Clash Over Politicizing Incident Ahead of Election'
-2026-09-28 07:59:22,058 - INFO -   Entities: ['bjp', 'delhi', 'aap', 'punjab']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 30.97it/s]
-2026-09-28 07:59:22,095 - INFO -   Best similarity match: 0.6000 with Event ID 11666
-2026-09-28 08:01:01,990 - INFO -   Generated Event Scope: 'This event covers the suicide of Gulzar Singh, a labourer in Punjab, and includes reactions, analyses, and follow-up developments related to the political conflict it has sparked between the BJP and AAP ahead of the assembly election. It excludes other actions by Gulzar Singh's family, BJP leaders, and AAP supporters unless they are direct developments of this specific incident.'
-2026-09-28 08:01:04,349 - INFO -   Created new invisible Event ID 12234.
-2026-09-28 08:01:04,349 - INFO - 
-Processing article ID 120088: 'Maratha Activist Manoj Jarange Patil Continues Hunger Strike for Community Certificates'
-2026-09-28 08:01:04,349 - INFO -   Entities: ['hyderabad', 'mumbai', 'eknath_shinde', 'shiv_sena']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 20.58it/s]
-2026-09-28 08:01:04,401 - INFO -   Best similarity match: 0.6475 with Event ID 11249
-2026-09-28 08:05:24,280 - INFO - Nomination: article_id=120088, event_id=11249, cosine=0.6475, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is not about a genuinely different named occurrence. It is a continuation of the specific event where Devendra Fadnavis was contacted regarding the Kunbi certificates demand.
-2. The article reports a development connected to the specific occurrence named in the scope. Manoj Jarange Patil's hunger strike and the government's response are direct consequences of the initial contact and demand for Kunbi caste certificates.
-3. The article clearly falls within the scope of the event as it discusses ongoing developments related to the specific demand for Kunbi caste certificates.
-
-Final answer: ATTACH
-2026-09-28 08:05:24,280 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-28 08:05:43,468 - INFO -   Generated Milestone (Attempt 1): 'Maratha activist Manoj Jarange Patil continues his hunger strike, demanding the government validate community certificates based on Kunbi entries, while Maharashtra ministers work to resolve the issue before September 12.'
-2026-09-28 08:05:46,095 - INFO -   Attached to Event ID 11249 successfully.
-2026-09-28 08:05:46,095 - INFO - 
-Processing article ID 120097: 'Modi urges Putin to end Russia-Ukraine conflict at BRICS summit'
-2026-09-28 08:05:46,095 - INFO -   Entities: ['delhi', 'pm_modi', 'narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 30.21it/s]
-2026-09-28 08:05:46,132 - INFO -   Best similarity match: 0.7448 with Event ID 10900
-2026-09-28 08:10:10,105 - INFO - Nomination: article_id=120097, event_id=10900, cosine=0.7448, vote=REJECT | Raw: Step-by-step reasoning:
-
-1. The new article is about a meeting between Vladimir Putin and Narendra Modi at the BRICS summit, which is a different named occurrence from the SCO Summit in Bishkek. The SCO Summit and the BRICS summit are distinct events, even though they both involve the same leaders and may have overlapping topics of discussion.
-2. Although the article discusses developments related to bilateral talks and cooperation, these are not directly connected to the specific SCO Summit in Bishkek and the bilateral talks that occurred during that summit. The SCO Summit and BRICS summit are separate events with different focuses and agendas.
-3. Given that the article is about a genuinely different named occurrence (BRICS summit), it does not fall within the scope of the event defined as the SCO Summit in Bishkek.
-
-REJECT
-2026-09-28 08:10:10,105 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-28 08:12:07,108 - INFO -   Generated Event Scope: 'This event covers the meeting between Narendra Modi and Vladimir Putin at the BRICS summit in New Delhi, including their discussions on ending the Russia-Ukraine conflict, defence cooperation, and other bilateral issues, as well as any reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions or meetings involving Narendra Modi, Vladimir Putin, or other BRICS leaders unless they are direct developments or consequences of the specific meeting and discussions held during the BRICS summit.'
-2026-09-28 08:12:09,751 - INFO -   Created new invisible Event ID 12235.
-2026-09-28 08:12:09,751 - INFO - 
-Processing article ID 120098: 'Kashmir's Film Festival Wraps with 120 Movies, Usha Uthup Performances'
-2026-09-28 08:12:09,751 - INFO -   Entities: ['kashmir', 'omar_abdullah', 'srinagar', 'jammu']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 23.02it/s]
-2026-09-28 08:12:09,798 - INFO -   Best similarity match: 0.5144 with Event ID 9767
-2026-09-28 08:14:08,686 - INFO -   Generated Event Scope: 'This event covers the 1st International Film Festival of Jammu & Kashmir, which concluded on September 10, 2026, and includes reactions, analyses, and follow-up developments related to it; it excludes other actions by the same people, parties, or regions unless they are direct developments of this specific film festival.'
-2026-09-28 08:14:11,305 - INFO -   Created new invisible Event ID 12236.
-2026-09-28 08:14:11,305 - INFO - 
-Processing article ID 120168: 'Bihar Congress Disciplinary Committee Hits 29 Leaders with Show-Cause Notices Over Protest'
-2026-09-28 08:14:11,305 - INFO -   Entities: ['delhi', 'congress', 'bihar']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 37.61it/s]
-2026-09-28 08:14:11,335 - INFO -   Best similarity match: 0.6938 with Event ID 12182
-2026-09-28 08:18:13,925 - INFO - Nomination: article_id=120168, event_id=12182, cosine=0.6938, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The new article is not about a genuinely different named occurrence. It is a direct development stemming from the protest on September 8, 2026, by Bihar Congress leaders outside the new Congress headquarters in Delhi.
-2. The article reports a development connected to the specific occurrence named in the scope. The Disciplinary Committee's issuance of show-cause notices to 29 leaders is a direct consequence of the protest and their demand for the removal of the state unit president and party in-charge.
-3. The article clearly falls within the scope of the event as it is a direct follow-up to the protest and its aftermath.
-
-Final answer: ATTACH
-2026-09-28 08:18:13,925 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-28 08:18:29,267 - INFO -   Generated Milestone (Attempt 1): 'The Bihar Pradesh Congress Committee's Disciplinary Committee issued show-cause notices to 29 leaders for participating in a protest against the unit leadership.'
-2026-09-28 08:19:28,681 - INFO -   Generated Event Title: 'Bihar Congress Leaders Face Disciplinary Action' | slug: bihar-congress-leaders-face-disciplinary-action
-2026-09-28 08:19:36,948 - INFO - [SAGA CHECK] Event 12182: 921 candidates share >=2 keys; capped to 8 strongest.
-2026-09-28 08:19:37,608 - INFO - [SAGA CHECK] Event 12182 vs closed Event 7976 (1/8, 7 shared keys)...
-2026-09-28 08:21:36,485 - INFO - [SAGA CHECK] Event 12182 vs closed Event 8075 (2/8, 7 shared keys)...
-2026-09-28 08:23:14,111 - INFO - [SAGA CHECK] Event 12182 vs closed Event 7672 (3/8, 7 shared keys)...
-2026-09-28 08:25:00,434 - INFO - [SAGA CHECK] Event 12182 vs closed Event 11523 (4/8, 6 shared keys)...
-2026-09-28 08:26:43,194 - INFO - [SAGA CHECK] Event 12182 vs closed Event 8961 (5/8, 6 shared keys)...
-2026-09-28 08:28:23,182 - INFO - [SAGA CHECK] Event 12182 vs closed Event 8682 (6/8, 6 shared keys)...
-2026-09-28 08:30:00,956 - INFO - [SAGA CHECK] Event 12182 vs closed Event 8551 (7/8, 6 shared keys)...
-2026-09-28 08:31:41,078 - INFO - [SAGA CHECK] Event 12182 vs closed Event 7548 (8/8, 6 shared keys)...
-2026-09-28 08:33:21,937 - INFO -   Attached to Event ID 12182 successfully.
-2026-09-28 08:33:21,937 - INFO - 
-Processing article ID 120170: 'Putin's First In-Person BRICS Visit Since 2022 Focuses on Resilience Amid Global Crises'
-2026-09-28 08:33:21,937 - INFO -   Entities: ['delhi', 'narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 28.92it/s]
-2026-09-28 08:33:21,975 - INFO -   Best similarity match: 0.7843 with Event ID 10737
-2026-09-28 08:37:58,230 - INFO - Nomination: article_id=120170, event_id=10737, cosine=0.7843, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is about Russian President Vladimir Putin's visit to India for the BRICS summit, which is the same named occurrence as the event scope. It does not describe a different event, such as a separate budget, court case, or deal.
-2. The article reports on Putin's first in-person BRICS visit since 2022, focusing on expanding trade, investment, and energy cooperation, which is a development directly connected to the BRICS summit in Delhi.
-3. Since the article clearly pertains to the BRICS summit and its related activities, it falls within the scope of the event.
-
-Final answer: ATTACH
-2026-09-28 08:37:58,230 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-28 08:38:14,476 - INFO -   Generated Milestone (Attempt 1): 'Russian President Vladimir Putin began a three-day visit to India for the BRICS summit, seeking to expand trade and energy cooperation.'
-2026-09-28 08:38:16,810 - INFO -   Attached to Event ID 10737 successfully.
-2026-09-28 08:38:16,810 - INFO - 
-Processing article ID 120172: 'Supreme Court Refuses Anticipatory Bail to Sumit Roy in Salboni Land Grab Case'
-2026-09-28 08:38:16,810 - INFO -   Entities: ['west_bengal', 'tmc']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 25.15it/s]
-2026-09-28 08:38:16,853 - INFO -   Best similarity match: 0.6902 with Event ID 12011
-2026-09-28 08:42:19,021 - INFO - Nomination: article_id=120172, event_id=12011, cosine=0.6902, vote=REJECT | Raw: Step-by-step reasoning:
-
-1. The new article is about the Supreme Court refusing anticipatory bail to Sumit Roy in the Salboni land grab case. This is a different named occurrence from the event scope, which is about the Supreme Court's criticism of slow investigations by probe agencies in cases involving persons in authority.
-2. The article does not directly report on the specific criticism or hearing mentioned in the event scope. It is focused on a bail hearing and does not discuss the slow investigations or the broader context of the Supreme Court's criticism.
-3. Since the article is about a genuinely different named occurrence and does not directly relate to the specific criticism of slow investigations, it falls outside the scope of the event.
-
-REJECT
-2026-09-28 08:42:19,021 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-28 08:44:14,660 - INFO -   Generated Event Scope: 'This event covers the Supreme Court's refusal of anticipatory bail to Sumit Roy in the Salboni land grab case, including any reactions, analyses, and follow-up developments related to this specific decision. It excludes other actions or events involving Sumit Roy, the TMC leader Abhishek Banerjee, or the West Bengal government unless they are direct developments of this bail refusal.'
-2026-09-28 08:44:17,221 - INFO -   Created new invisible Event ID 12237.
-2026-09-28 08:44:17,222 - INFO - 
-Processing article ID 120176: 'Bridge collapse in Bihar injures seven, traps one for 90 minutes'
-2026-09-28 08:44:17,222 - INFO -   Entities: ['nda', 'bihar']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 22.61it/s]
-2026-09-28 08:44:17,269 - INFO -   Best similarity match: 0.5017 with Event ID 12182
-2026-09-28 08:46:16,735 - INFO -   Generated Event Scope: 'This event covers the collapse of part of an under-construction bridge in Vaishali district, Bihar, on September 10, 2026, including reactions, analyses, and follow-up developments related to the incident. It excludes other actions by the same people, parties, or regions unless they are direct developments of this specific bridge collapse incident.'
-2026-09-28 08:46:19,347 - INFO -   Created new invisible Event ID 12238.
-2026-09-28 08:46:19,347 - INFO - 
-Processing article ID 120189: 'Putin heads to Delhi for BRICS summit amid global energy and agriculture crises'
-2026-09-28 08:46:19,347 - INFO -   Entities: ['delhi', 'narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 37.79it/s]
-2026-09-28 08:46:19,377 - INFO -   Best similarity match: 0.8346 with Event ID 10737
-2026-09-28 08:50:18,447 - INFO - Nomination: article_id=120189, event_id=10737, cosine=0.8346, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is about Russian President Vladimir Putin's arrival in Delhi for the BRICS summit, which is the same named occurrence as the event scope. It does not describe a different event or occurrence.
-2. The article reports on Putin's visit and the summit's agenda, which includes discussions on global energy and agriculture crises. This is a development directly connected to the BRICS summit mentioned in the event scope.
-3. Since the article clearly pertains to the BRICS summit and its related discussions, it falls within the scope of the event.
-
-Final answer: ATTACH
-2026-09-28 08:50:18,447 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-28 08:50:33,535 - INFO -   Generated Milestone (Attempt 1): 'The 18th BRICS summit, focused on global energy and agriculture crises, will feature discussions between Russian President Putin and Indian Prime Minister Modi.'
-2026-09-28 08:50:36,276 - INFO -   Attached to Event ID 10737 successfully.
-2026-09-28 08:50:36,276 - INFO - 
-Processing article ID 120210: 'BJP Loses Paralam Panchayat to UDF in 10-6 Vote Battle, Accuses Betrayal'
-2026-09-28 08:50:36,276 - INFO -   Entities: ['bjp']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 31.38it/s]
-2026-09-28 08:50:36,311 - INFO -   Best similarity match: 0.6777 with Event ID 8925
-2026-09-28 08:55:00,878 - INFO - Nomination: article_id=120210, event_id=8925, cosine=0.6777, vote=REJECT | Raw: Step-by-step reasoning:
-
-1. The new article is about the BJP losing control of the Paralam panchayat to the UDF in Thrissur district. This is a different named occurrence from the clash between Pinarayi Vijayan and V. Shamsudheen over the PM SHRI scheme during the Kerala Assembly session.
-2. The article does not report any development, reaction, preparation, analysis, or consequence connected to the specific clash in the Kerala Assembly session. It is a separate political event involving local governance and does not directly relate to the criticisms and policies discussed in the original event.
-3. Since the article is about a genuinely different named occurrence and does not connect to the specific clash in the Kerala Assembly session, it should be rejected.
-
-REJECT
-2026-09-28 08:55:00,878 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-28 08:56:42,411 - INFO -   Generated Event Scope: 'This event covers the UDF's victory over the BJP in the Paralam panchayat election in Thrissur district, including reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions by the UDF, BJP, or in Thrissur district unless they are direct developments stemming from this particular election outcome.'
-2026-09-28 08:56:44,835 - INFO -   Created new invisible Event ID 12239.
-2026-09-28 08:56:44,836 - INFO - 
-Processing article ID 120229: 'TVK fields Maragatham, Sathyabama in Madurantakam, Dharapuram bypollstriggered by their AIADMK exit'
-2026-09-28 08:56:44,836 - INFO -   Entities: ['aiadmk', 'tamil_nadu']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 35.91it/s]
-2026-09-28 08:56:44,867 - INFO -   Best similarity match: 0.6804 with Event ID 11879
-2026-09-28 09:00:35,609 - INFO - Nomination: article_id=120229, event_id=11879, cosine=0.6804, vote=REJECT | Raw: Step-by-step reasoning:
-1. The new article is about TVK fielding candidates for by-elections in Madurantakam and Dharapuram, triggered by their exit from AIADMK. This is a different named occurrence from the offer made to Devan for the role of Kerala state president.
-2. The article does not report any development, reaction, preparation, analysis, or consequence connected to the specific occurrence of offering Devan the role of Kerala state president.
-3. Since the article is about a genuinely different named occurrence, it does not fall within the scope of the event.
-
-REJECT
-2026-09-28 09:00:35,609 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-28 09:02:36,396 - INFO -   Generated Event Scope: 'This event covers the announcement by Tamilaga Vettri Kazhagam (TVK) of Maragatham Kumaravel and P. Sathyabama as candidates for the Madurantakam and Dharapuram Assembly constituency byelections, including any reactions, analyses, and follow-up developments related to this specific announcement. It excludes other actions by TVK, Maragatham Kumaravel, P. Sathyabama, or in the Madurantakam and Dharapuram constituencies, unless they are direct developments of this byelection announcement.'
-2026-09-28 09:02:38,814 - INFO -   Created new invisible Event ID 12240.
-2026-09-28 09:02:38,814 - INFO - Deadline reached — stopping batch early (per-article checkpoints already committed).
-2026-09-28 09:02:39,289 - INFO - Batch completed. attached=26, has_more=true
-has_more=true
-articles_attached=26
-	Command being timed: "python timeline_pipeline.py --deadline-ts 1790585893 --batch-size 200"
-	User time (seconds): 27913.39
-	System time (seconds): 9.62
-	Percent of CPU this job got: 345%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:14:32
-	Average shared text size (kbytes): 0
-	Average unshared data size (kbytes): 0
-	Average stack size (kbytes): 0
-	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 14266052
-	Average resident set size (kbytes): 0
-	Major (requiring I/O) page faults: 52695
-	Minor (reclaiming a frame) page faults: 573321
-	Voluntary context switches: 154712
-	Involuntary context switches: 3939600
-	Swaps: 0
-	File system inputs: 22572544
-	File system outputs: 180600
-	Socket messages sent: 0
-	Socket messages received: 0
-	Signals delivered: 0
-	Page size (bytes): 4096
-	Exit status: 0
-               total        used        free      shared  buff/cache   available
-Mem:           15989        1207        1834          40       13334       14782
-Swap:           3071          53        3018
-pipeline_exit=0
