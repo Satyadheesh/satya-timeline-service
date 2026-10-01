@@ -980,6 +980,18 @@ def main():
         logging.critical(f"Database connection failed: {e}")
         sys.exit(1)
 
+    # Read-path indexes for the site's /timelines list (newest events + their milestone dates).
+    # Without them every list query scanned all events and sorted every milestone row (~73k rows
+    # read per query on Turso). IF NOT EXISTS: a no-op after the first run. Never fatal.
+    if not args.dry_run and not SHARD_CTX:
+        for ddl in ("CREATE INDEX IF NOT EXISTS idx_events_last_seen ON events(last_seen)",
+                    "CREATE INDEX IF NOT EXISTS idx_ea_event_date ON event_articles(event_id, event_date)"):
+            try:
+                cursor.execute(ddl)
+                conn.commit()
+            except Exception as e:
+                logging.warning(f"Index creation skipped ({ddl.split(' ON ')[0]}): {e}")
+
     # Full-coverage rebuild: wipe timeline state so replay starts at article 0.
     if args.reset_events:
         if SHARD_CTX:
