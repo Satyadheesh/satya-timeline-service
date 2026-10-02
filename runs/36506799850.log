@@ -1,367 +1,0 @@
-2026-09-29 01:18:28,171 - INFO - Internal runtime timer active: soft deadline set for 03:28:27 UTC (max 130 mins).
-2026-09-29 01:18:28,171 - INFO - Pipeline started. dry_run=False, batch_size=200, sim_threshold=0.6
-2026-09-29 01:18:28,179 - INFO - Connecting to remote Turso Database at: libsql://satya-db-yashveer0723.aws-ap-south-1.turso.io
-2026-09-29 01:18:29,569 - INFO - Loaded cursor from DB. Last processed article ID: 121300
-2026-09-29 01:18:29,569 - INFO - Fetching up to 200 articles after cursor (id 121300)...
-2026-09-29 01:18:40,185 - INFO - Loading sentence-transformers/all-MiniLM-L6-v2...
-2026-09-29 01:18:40,186 - INFO - No device provided, using cpu
-2026-09-29 01:18:40,317 - INFO - HTTP Request: GET https://huggingface.co/api/agent-harnesses "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,386 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-2026-09-29 01:18:40,386 - WARNING - Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-2026-09-29 01:18:40,392 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,398 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,469 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:40,475 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,480 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,481 - INFO - Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
-2026-09-29 01:18:40,549 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:40,554 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,624 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:40,629 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2FREADME.md=&etag=%2244af2e3b0fa3a0b6239e48422972bf755f28fde0%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,634 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2FREADME.md=&etag=%2244af2e3b0fa3a0b6239e48422972bf755f28fde0%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,705 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:40,710 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,778 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:40,783 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fsentence_bert_config.json=&etag=%2259d594003bf59880a884c574bf88ef7555bb0202%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,788 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fsentence_bert_config.json=&etag=%2259d594003bf59880a884c574bf88ef7555bb0202%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,857 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
-2026-09-29 01:18:40,926 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:40,931 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:40,937 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:41,039 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/model.safetensors "HTTP/1.1 302 Found"
-2026-09-29 01:18:41,124 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/xet-read-token/1110a243fdf4706b3f48f1d95db1a4f5529b4d41 "HTTP/1.1 200 OK"
-Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 3356.28it/s]
-2026-09-29 01:18:42,817 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
-2026-09-29 01:18:42,888 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-29 01:18:42,958 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-29 01:18:43,047 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-29 01:18:43,143 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:43,150 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,155 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,225 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:43,231 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,301 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:43,307 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,380 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:43,385 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,456 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
-2026-09-29 01:18:43,527 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,596 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/vocab.txt "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:43,602 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fvocab.txt=&etag=%22fb140275c155a9c7c5a3b3e0e77a9e839594a938%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,608 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fvocab.txt=&etag=%22fb140275c155a9c7c5a3b3e0e77a9e839594a938%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,678 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:43,685 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer.json=&etag=%22cb202bfe2e3c98645018a6d12f182a434c9d3e02%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,691 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer.json=&etag=%22cb202bfe2e3c98645018a6d12f182a434c9d3e02%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,764 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
-2026-09-29 01:18:43,846 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/special_tokens_map.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:43,852 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/special_tokens_map.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fspecial_tokens_map.json=&etag=%22e7b0375001f109a6b8873d756ad4f7bbb15fbaa5%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,857 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/special_tokens_map.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fspecial_tokens_map.json=&etag=%22e7b0375001f109a6b8873d756ad4f7bbb15fbaa5%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:43,928 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
-2026-09-29 01:18:44,035 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-29 01:18:44,041 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2F1_Pooling%2Fconfig.json=&etag=%22d1514c3162bbe87b343f565fadc62e6c06f04f03%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:44,046 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2F1_Pooling%2Fconfig.json=&etag=%22d1514c3162bbe87b343f565fadc62e6c06f04f03%22 "HTTP/1.1 200 OK"
-2026-09-29 01:18:44,115 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/2_Normalize/config.json "HTTP/1.1 404 Not Found"
-2026-09-29 01:18:44,189 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
-2026-09-29 01:18:44,205 - INFO - Loading Gemma 2B from ./models/gemma-2-2b-it-Q4_K_M.gguf...
-llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
-2026-09-29 01:18:49,178 - INFO - Loading Qwen 14B from ./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf...
-2026-09-29 01:19:15,702 - INFO - 
-Running chapter closure sweep relative to logical clock cutoff: 1787496860...
-2026-09-29 01:19:17,115 - INFO - Found 35 events to close (closure budget until 02:10:27).
-2026-09-29 01:19:17,116 - INFO - Closing Event ID 11787...
-2026-09-29 01:19:19,468 - INFO - Event ID 11787 closed successfully.
-2026-09-29 01:19:19,468 - INFO - Closing Event ID 11789...
-2026-09-29 01:19:21,828 - INFO - Event ID 11789 closed successfully.
-2026-09-29 01:19:21,828 - INFO - Closing Event ID 10263...
-2026-09-29 01:19:23,696 - INFO - [BATCH AUDIT] Event 10263: auditing articles 1-6 of 6 in one call...
-2026-09-29 01:25:51,518 - WARNING - [BATCH AUDIT] Model returned unknown article IDs [1115] — ignoring those.
-2026-09-29 01:25:51,519 - INFO - [EVICT DECISION] Event 10263: Evict Article 97656
-2026-09-29 01:25:51,519 - INFO - [EVICT DECISION] Event 10263: Evict Article 108277
-2026-09-29 01:25:51,519 - INFO - [BATCH AUDIT] Event 10263: chunk verdict — keep 4, evict 2.
-2026-09-29 01:25:57,870 - INFO - [SAGA CHECK] Event 10263: 1281 candidates share >=2 keys; capped to 8 strongest.
-2026-09-29 01:25:58,336 - INFO - [SAGA CHECK] Event 10263 vs closed Event 9792 (1/8, 8 shared keys)...
-2026-09-29 01:27:52,470 - INFO - [SAGA CHECK] Event 10263 vs closed Event 9272 (2/8, 8 shared keys)...
-2026-09-29 01:29:34,695 - INFO - [SAGA CHECK] Event 10263 vs closed Event 3838 (3/8, 8 shared keys)...
-2026-09-29 01:31:19,634 - INFO - [SAGA CHECK] Event 10263 vs closed Event 10150 (4/8, 7 shared keys)...
-2026-09-29 01:33:04,197 - INFO - [SAGA CHECK] Event 10263 vs closed Event 8978 (5/8, 7 shared keys)...
-2026-09-29 01:34:44,468 - INFO - [SAGA CHECK] Event 10263 vs closed Event 8753 (6/8, 7 shared keys)...
-2026-09-29 01:36:31,618 - INFO - [SAGA CHECK] Event 10263 vs closed Event 7694 (7/8, 7 shared keys)...
-2026-09-29 01:38:16,123 - INFO - [SAGA CHECK] Event 10263 vs closed Event 6056 (8/8, 7 shared keys)...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.52it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.51it/s]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 32.80it/s]
-2026-09-29 01:40:10,384 - INFO - Event ID 10263 closed successfully.
-2026-09-29 01:40:10,385 - INFO - Closing Event ID 11791...
-2026-09-29 01:40:12,742 - INFO - Event ID 11791 closed successfully.
-2026-09-29 01:40:12,742 - INFO - Closing Event ID 11792...
-2026-09-29 01:40:15,097 - INFO - Event ID 11792 closed successfully.
-2026-09-29 01:40:15,097 - INFO - Closing Event ID 11116...
-2026-09-29 01:40:17,196 - INFO - [BATCH AUDIT] Event 11116: auditing articles 1-30 of 36 in one call...
-2026-09-29 01:51:55,438 - WARNING - [BATCH AUDIT] Event 11116: no parsable verdict — keeping all articles in this chunk. Raw: Let's review each article to ensure it falls within the scope of the event:
-
-1. **99822**: Directly pertains to the Chief Secretary's directive and LDF criticism.
-2. **100544**: Describes the circular
-2026-09-29 01:51:55,438 - INFO - [BATCH AUDIT] Event 11116: chunk verdict — keep 30, evict 0.
-2026-09-29 01:51:55,438 - INFO - [BATCH AUDIT] Event 11116: auditing articles 31-36 of 36 in one call...
-2026-09-29 01:57:40,311 - WARNING - [BATCH AUDIT] Event 11116: no parsable verdict — keeping all articles in this chunk. Raw: Let's analyze each article to determine if it falls within the scope of the event:
-
-1. **109805**: Rajya Sabha MP Kapil Sibal challenged Home Minister Amit Shah's accusation of Congress singling out t
-2026-09-29 01:57:40,311 - INFO - [BATCH AUDIT] Event 11116: chunk verdict — keep 6, evict 0.
-2026-09-29 01:57:46,881 - INFO - [SAGA CHECK] Event 11116: 1411 candidates share >=2 keys; capped to 8 strongest.
-2026-09-29 01:57:47,352 - INFO - [SAGA CHECK] Event 11116 vs closed Event 10657 (1/8, 8 shared keys)...
-2026-09-29 01:59:47,822 - INFO - [SAGA CHECK] Event 11116 vs closed Event 8682 (2/8, 8 shared keys)...
-2026-09-29 02:01:27,475 - INFO - [SAGA CHECK] Event 11116 vs closed Event 99 (3/8, 8 shared keys)...
-2026-09-29 02:03:11,135 - INFO - [SAGA CHECK] Event 11116 vs closed Event 11417 (4/8, 7 shared keys)...
-2026-09-29 02:04:51,177 - INFO - [SAGA CHECK] Event 11116 vs closed Event 9773 (5/8, 7 shared keys)...
-2026-09-29 02:06:21,432 - INFO - [SAGA CHECK] Event 11116 vs closed Event 11192 (6/8, 7 shared keys)...
-2026-09-29 02:08:06,128 - INFO - [SAGA CHECK] Event 11116 vs closed Event 11221 (7/8, 7 shared keys)...
-2026-09-29 02:09:04,624 - INFO - [SAGA CHECK] Event 11116 vs closed Event 10322 (8/8, 7 shared keys)...
-2026-09-29 02:17:43,974 - INFO -   [REFRAME] Event 11116 re-titled from 36 milestones: 'Kerala Vande Mataram Controversy During Independence Day Celebrations'
-2026-09-29 02:17:44,229 - INFO - Event ID 11116 closed successfully.
-2026-09-29 02:17:44,229 - INFO - Closure budget used — remaining closures resume on next run.
-2026-09-29 02:17:44,230 - INFO - 
-Checking for historical NULL milestones to backfill...
-2026-09-29 02:17:44,928 - INFO - Running NULL milestone sweep for 20 articles...
-2026-09-29 02:26:33,095 - INFO - Successfully backfilled 20 NULL milestones.
-2026-09-29 02:26:36,368 - INFO - Loaded 543 candidate events (0 recently-closed, reopenable).
-2026-09-29 02:26:36,369 - INFO - 
-Processing article ID 121306: 'BRICS Declaration Draws Criticism Over Omissions on Disputes, Terror Attack'
-2026-09-29 02:26:36,370 - INFO -   Entities: ['narendra_modi', 'ladakh', 'delhi', 'congress', 'uttar_pradesh', 'pm_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 31.50it/s]
-2026-09-29 02:26:36,405 - INFO -   Best similarity match: 0.7576 with Event ID 10737
-2026-09-29 02:31:00,280 - INFO - Nomination: article_id=121306, event_id=10737, cosine=0.7576, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is not about a genuinely different named occurrence. It is specifically about the BRICS summit in Delhi scheduled for September 12-13, 2026, which is the same event mentioned in the scope.
-2. The article reports reactions and criticisms related to the BRICS New Delhi Declaration, which is a direct development and consequence of the summit. It includes comments from opposition leaders and doubts about the tangible benefits for citizens, all of which are reactions and analyses connected to the summit.
-3. Since the article clearly falls under the scope of the BRICS summit in Delhi, it should be attached.
-
-Final answer: ATTACH
-2026-09-29 02:31:00,280 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-29 02:31:15,003 - INFO -   Generated Milestone (Attempt 1): 'Congress members criticized the BRICS New Delhi Declaration for failing to address the Arunachal Pradesh and Ladakh disputes and the Pahalgam terror attack.'
-2026-09-29 02:31:17,532 - INFO -   Attached to Event ID 10737 successfully.
-2026-09-29 02:31:17,532 - INFO - 
-Processing article ID 121311: 'BRICS leaders call for restraint, avoid naming US, Israel, Russia at summit'
-2026-09-29 02:31:17,532 - INFO -   Entities: ['delhi', 'narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 29.53it/s]
-2026-09-29 02:31:17,570 - INFO -   Best similarity match: 0.7480 with Event ID 10737
-2026-09-29 02:34:26,436 - INFO - Nomination: article_id=121311, event_id=10737, cosine=0.7480, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The new article is about the BRICS summit in New Delhi, which is the specific named occurrence covered in the event scope. It does not describe a different event, budget, court case, or scheme.
-2. The article reports on a development at the BRICS summit, specifically the joint declaration adopted by the leaders, which is directly connected to the summit occurrence named in the scope.
-3. Since the article clearly reports on a development at the BRICS summit, it falls within the event's scope.
-
-Final answer: ATTACH
-2026-09-29 02:34:26,436 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-29 02:34:40,520 - INFO -   Generated Milestone (Attempt 1): 'BRICS leaders, including Indian Prime Minister Modi, adopted a joint declaration avoiding direct condemnation of the US-Israel war on Iran or Russia's actions in Ukraine.'
-2026-09-29 02:34:42,894 - INFO -   Attached to Event ID 10737 successfully.
-2026-09-29 02:34:42,894 - INFO - 
-Processing article ID 121335: 'Shehbaz Sharif to meet Donald Trump in New York on September 23'
-2026-09-29 02:34:42,895 - INFO -   Entities: ['jammu', 'kashmir', 'delhi', 'narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 33.21it/s]
-2026-09-29 02:34:42,928 - INFO -   Best similarity match: 0.6163 with Event ID 12045
-2026-09-29 02:38:30,054 - INFO - Nomination: article_id=121335, event_id=12045, cosine=0.6163, vote=REJECT | Raw: Step-by-step reasoning:
-
-1. The article is about Shehbaz Sharif meeting Donald Trump in New York, which is a different named occurrence from the event where the office of Pakistan's Prime Minister shared a cropped photo from the SCO summit. The meeting and the photo incident are distinct events.
-2. The meeting with Donald Trump is not a development, reaction, preparation, analysis, or consequence of the specific photo-sharing incident. It is a separate event with its own context and purpose.
-3. Since the article does not relate to the specific occurrence named in the event scope, it should be rejected.
-
-REJECT
-2026-09-29 02:38:30,054 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-29 02:40:13,139 - INFO -   Generated Event Scope: 'This event covers the meeting between Shehbaz Sharif and Donald Trump in New York on September 23, including any reactions, analyses, and follow-up developments from this specific occurrence. It excludes other actions or meetings by Shehbaz Sharif, Donald Trump, or related parties unless they are direct developments or consequences of this particular meeting.'
-2026-09-29 02:40:15,661 - INFO -   Created new invisible Event ID 12304.
-2026-09-29 02:40:15,661 - INFO - 
-Processing article ID 121352: 'On the sidelines of the BRICS summit, Prime Minister Narendra Modi held'
-2026-09-29 02:40:15,661 - INFO -   Entities: ['pm_modi', 'narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 25.08it/s]
-2026-09-29 02:40:15,704 - INFO -   Best similarity match: 0.7276 with Event ID 10900
-2026-09-29 02:44:28,390 - INFO - Nomination: article_id=121352, event_id=10900, cosine=0.7276, vote=REJECT | Raw: Step-by-step reasoning:
-
-1. The new article discusses bilateral discussions and meetings held by Prime Minister Narendra Modi on the sidelines of the BRICS summit. The event scope, however, is specifically about the SCO Summit in Bishkek and related bilateral talks. The BRICS summit is a different named occurrence and not part of the SCO Summit event.
-2. Since the article is about a genuinely different named occurrence (BRICS summit), it does not fall under the scope of the SCO Summit event, even though it involves the same leader (Prime Minister Narendra Modi).
-
-Based on the above reasoning, the answer is:
-
-REJECT
-2026-09-29 02:44:28,390 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-29 02:46:17,413 - INFO -   Generated Event Scope: 'This event covers the bilateral discussions held by Prime Minister Narendra Modi with various leaders on the sidelines of the BRICS summit, including reactions, analyses, and follow-up developments of these meetings; it excludes other actions by the same people, parties, or regions unless they are direct developments of these specific discussions.'
-2026-09-29 02:46:19,813 - INFO -   Created new invisible Event ID 12305.
-2026-09-29 02:46:19,816 - INFO - 
-Processing article ID 121358: 'Delhi Assembly Panel to Inspect Bungalow Over Luxury Renovation Claims'
-2026-09-29 02:46:19,816 - INFO -   Entities: ['arvind_kejriwal', 'bjp', 'aap', 'chandigarh', 'punjab', 'delhi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 34.97it/s]
-2026-09-29 02:46:19,848 - INFO -   Best similarity match: 0.5404 with Event ID 8943
-2026-09-29 02:48:02,144 - INFO -   Generated Event Scope: 'This event covers the inspection of 6, Flag Staff Road, New Delhi, by the Delhi Assembly's Public Accounts Committee on Monday, including reactions, analyses, and follow-up developments related to the luxury renovation claims and cost increase. It excludes other actions by the Public Accounts Committee, AAP, and BJP unless they are direct developments or responses to the specific inspection and renovation controversy.'
-2026-09-29 02:48:04,558 - INFO -   Created new invisible Event ID 12306.
-2026-09-29 02:48:04,559 - INFO - 
-Processing article ID 121364: 'Modi Unites 11 Nations, Including China, on Global Issues at BRICS Summit'
-2026-09-29 02:48:04,559 - INFO -   Entities: ['jaipur', 'bengaluru', 'indore', 'chennai', 'nagpur', 'kashmir', 'agra', 'narendra_modi', 'chandigarh', 'delhi', 'jammu', 'pm_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 27.60it/s]
-2026-09-29 02:48:04,598 - INFO -   Best similarity match: 0.7860 with Event ID 10737
-2026-09-29 02:52:11,011 - INFO - Nomination: article_id=121364, event_id=10737, cosine=0.7860, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is about the 18th BRICS Summit in New Delhi, which is the same named occurrence as the event scope. It does not describe a different budget, court case, or scheme, even though it includes additional details about the summit's outcomes and participants.
-2. The article reports on developments and reactions connected to the specific BRICS Summit in New Delhi, including the signing of a declaration and discussions on various global issues. These are clearly part of the summit's proceedings and outcomes.
-3. Since the article is clearly connected to the BRICS Summit in New Delhi and does not describe a different named occurrence, it falls within the event's scope.
-
-Final answer: ATTACH
-2026-09-29 02:52:11,011 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-29 02:52:25,200 - INFO -   Generated Milestone (Attempt 1): 'India successfully led BRICS leaders to sign a declaration, solidifying its position as a global power and advancing consensus on key issues.'
-2026-09-29 02:52:27,587 - INFO -   Attached to Event ID 10737 successfully.
-2026-09-29 02:52:27,588 - INFO - 
-Processing article ID 121366: 'Ramaphosa warns BRICS: Fear not AI, keep it "under control"'
-2026-09-29 02:52:27,588 - INFO -   Entities: ['delhi', 'pm_modi', 'narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 28.42it/s]
-2026-09-29 02:52:27,626 - INFO -   Best similarity match: 0.7128 with Event ID 10737
-2026-09-29 02:56:06,968 - INFO - Nomination: article_id=121366, event_id=10737, cosine=0.7128, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is about a speech given by South African President Cyril Ramaphosa at the BRICS Summit in New Delhi, which is the same named occurrence as the event scope. It does not describe a different event, budget, court case, or scheme.
-2. The article reports on a development at the BRICS Summit, specifically Ramaphosa's warning about AI and the summit's declaration on AI governance. This is clearly a development connected to the specific occurrence named in the event scope.
-3. Since the article is about a development at the same BRICS Summit mentioned in the event scope, it falls within the scope of the event.
-
-Final answer: ATTACH
-2026-09-29 02:56:06,968 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-29 02:56:22,926 - INFO -   Generated Milestone (Attempt 1): 'At the BRICS Summit, South African President Cyril Ramaphosa urged for human-led AI development to prevent its uncontrolled growth.'
-2026-09-29 02:56:25,469 - INFO -   Attached to Event ID 10737 successfully.
-2026-09-29 02:56:25,469 - INFO - 
-Processing article ID 121371: 'Punjab Congress plans protests over prolonged power cuts'
-2026-09-29 02:56:25,470 - INFO -   Entities: ['punjab', 'aap', 'congress']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 68.62it/s]
-2026-09-29 02:56:25,487 - INFO -   Best similarity match: 0.6139 with Event ID 9828
-2026-09-29 02:59:56,497 - INFO - Nomination: article_id=121371, event_id=9828, cosine=0.6139, vote=REJECT | Raw: Step-by-step reasoning:
-1. The new article is about the Punjab Congress planning protests over prolonged power cuts. This is a different named occurrence from the meeting between Bhupesh Baghel and Punjab party leaders to address tensions over new leadership roles.
-2. The article does not report any development, reaction, preparation, analysis, or consequence connected to the specific meeting named in the scope. It is about a different political action by the Punjab Congress related to power cuts.
-3. Since the article is about a genuinely different named occurrence and does not connect to the specific meeting in any way, it should be rejected.
-
-REJECT
-2026-09-29 02:59:56,497 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-29 03:01:03,275 - INFO -   Generated Event Scope: 'This event covers the planned protests by the Punjab Congress over prolonged power cuts in Punjab, including any reactions, analyses, and follow-up developments related to these protests. It excludes other actions or statements by the Punjab Congress unless they are directly related to or a development of the planned protests over the power cuts.'
-2026-09-29 03:01:05,680 - INFO -   Created new invisible Event ID 12307.
-2026-09-29 03:01:05,680 - INFO - 
-Processing article ID 121374: 'Opposition faces TMC's Sanchita Pradhan and Rabiul Alam in West Bengal by-elections'
-2026-09-29 03:01:05,680 - INFO -   Entities: ['trinamool', 'tmc', 'mamata_banerjee', 'assam', 'cpi', 'puducherry', 'congress', 'tamil_nadu', 'west_bengal']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 27.67it/s]
-2026-09-29 03:01:05,719 - INFO -   Best similarity match: 0.7380 with Event ID 12159
-2026-09-29 03:05:46,955 - INFO - Nomination: article_id=121374, event_id=12159, cosine=0.7380, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is not about a genuinely different named occurrence. It is specifically about the by-elections in Rejinagar and Nandigram following the resignations of Suvendu Adhikari and Humayun Kabir, which is the exact event described in the scope.
-2. The article reports on the candidates nominated by the Trinamool Congress and the opposition parties for the upcoming by-elections. This is a direct development related to the by-elections mentioned in the event scope.
-3. Since the article clearly falls under the scope of the event, there is no need to reject it based on the third rule.
-
-Final answer: ATTACH
-2026-09-29 03:05:46,955 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-29 03:06:03,622 - INFO -   Generated Milestone (Attempt 1): 'The All India Trinamool Congress named Sanchita Pradhan for Nandigram and Rabiul Alam Chowdhury for Rejinagar in upcoming West Bengal by-elections.'
-2026-09-29 03:06:06,028 - INFO -   Attached to Event ID 12159 successfully.
-2026-09-29 03:06:06,029 - INFO - 
-Processing article ID 121377: 'Opposition-led states skip BRICS meet over budget protest or prior engagements'
-2026-09-29 03:06:06,029 - INFO -   Entities: ['pinarayi_vijayan', 'kerala', 'himachal_pradesh', 'bjp', 'assam', 'maharashtra', 'yogi_adityanath', 'devendra_fadnavis', 'uttar_pradesh', 'west_bengal', 'karnataka', 'ladakh', 'nda', 'punjab', 'congress', 'uttarakhand', 'delhi', 'tamil_nadu', 'telangana']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 32.75it/s]
-2026-09-29 03:06:06,063 - INFO -   Best similarity match: 0.5928 with Event ID 11826
-2026-09-29 03:07:54,561 - INFO -   Generated Event Scope: 'This event covers the opposition-led states' leaders skipping the BRICS meet in New Delhi due to either prior engagements or protest over the Union budget, including any reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions by the same leaders, parties, or regions unless they are direct developments of this specific occurrence at the BRICS meet.'
-2026-09-29 03:07:56,930 - INFO -   Created new invisible Event ID 12308.
-2026-09-29 03:07:56,930 - INFO - 
-Processing article ID 121380: 'On Sunday, the Ministry of External Affairs (MEA) reported that 13 Indian'
-2026-09-29 03:07:56,930 - INFO -   Entities: ['delhi', 'narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 34.83it/s]
-2026-09-29 03:07:56,962 - INFO -   Best similarity match: 0.4641 with Event ID 11946
-2026-09-29 03:09:37,502 - INFO -   Generated Event Scope: 'This event covers the attack on the commercial ship MT El Gaia off Oman's coast, including the rescue of 13 Indian seafarers, the search for the missing crew member, and any subsequent reactions, analyses, and follow-up developments related to this specific incident. It excludes other actions or incidents involving the Ministry of External Affairs, the Indian Embassy, or the Omani authorities unless they are direct developments or responses to the attack on MT El Gaia.'
-2026-09-29 03:09:39,887 - INFO -   Created new invisible Event ID 12309.
-2026-09-29 03:09:39,887 - INFO - 
-Processing article ID 121387: 'On Sunday at 2 am, a blast near the main gate'
-2026-09-29 03:09:39,887 - INFO -   Entities: ['punjab', 'akali_dal']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 35.67it/s]
-2026-09-29 03:09:39,918 - INFO -   Best similarity match: 0.5167 with Event ID 11367
-2026-09-29 03:11:19,515 - INFO -   Generated Event Scope: 'This event covers the blast near the main gate of Jalalabad police station in Punjab's Fazilka district on Sunday at 2 am, including reactions, analyses, and follow-up developments related to it. It excludes other actions by the same people, parties, or regions unless they are direct developments of this specific blast occurrence.'
-2026-09-29 03:11:21,925 - INFO -   Created new invisible Event ID 12310.
-2026-09-29 03:11:21,925 - INFO - 
-Processing article ID 121408: 'On September 16, Mumbai police denied Manoj Jarange, a Maratha quota activist'
-2026-09-29 03:11:21,925 - INFO -   Entities: ['shiv_sena', 'bjp', 'maharashtra', 'mumbai', 'devendra_fadnavis', 'eknath_shinde']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 36.30it/s]
-2026-09-29 03:11:21,956 - INFO -   Best similarity match: 0.8136 with Event ID 11249
-2026-09-29 03:15:37,075 - INFO - Nomination: article_id=121408, event_id=11249, cosine=0.8136, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is not about a genuinely different named occurrence. It is still centered around the same event of Manoj Jarange's hunger strike and the government's response to the reservation demands.
-2. The article reports a development connected to the specific occurrence named in the scope. It details the police's denial of permission for Jarange's hunger strike and Jarange's reaction to this denial, which is a direct consequence of the ongoing issue with the reservation demands.
-3. The article clearly falls within the scope of the event as it continues to report on the reactions and developments related to the specific occurrence of Manoj Jarange's protest and the government's stance on the reservation demands.
-
-Final answer: ATTACH
-2026-09-29 03:15:37,075 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-29 03:15:51,042 - INFO -   Generated Milestone (Attempt 1): 'Mumbai police denied activist Manoj Jarange permission for an indefinite hunger strike, citing security concerns and non-compliance with previous protests.'
-2026-09-29 03:15:53,429 - INFO -   Attached to Event ID 11249 successfully.
-2026-09-29 03:15:53,430 - INFO - 
-Processing article ID 121426: 'On 13 September 2026, Indian High Commissioner Dinesh Trivedi met with high-level'
-2026-09-29 03:15:53,430 - INFO -   Entities: ['west_bengal', 'kolkata', 'delhi', 'narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 35.50it/s]
-2026-09-29 03:15:53,461 - INFO -   Best similarity match: 0.5188 with Event ID 12032
-2026-09-29 03:17:35,237 - INFO -   Generated Event Scope: 'This event covers the meeting between Indian High Commissioner Dinesh Trivedi and high-level Bangladeshi officials on 13 September 2026, including reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions by the same people, parties, or regions unless they are direct developments of this particular meeting.'
-2026-09-29 03:17:37,637 - INFO -   Created new invisible Event ID 12311.
-2026-09-29 03:17:37,637 - INFO - 
-Processing article ID 121474: 'Yadav Slams Modi, Choudhary Over Bihar Floods Affecting 48.35 Lakh People'
-2026-09-29 03:17:37,637 - INFO -   Entities: ['sonia_gandhi', 'nda', 'bjp', 'narendra_modi', 'rjd', 'janata_dal', 'congress', 'gujarat', 'amit_shah', 'bihar']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 29.05it/s]
-2026-09-29 03:17:37,675 - INFO -   Best similarity match: 0.6559 with Event ID 10666
-2026-09-29 03:22:07,352 - INFO - Nomination: article_id=121474, event_id=10666, cosine=0.6559, vote=REJECT | Raw: Step-by-step reasoning:
-
-1. The new article is about Tejashwi Yadav criticizing the central and state governments for their handling of the Bihar floods, which is a different named occurrence from the original event, which was about Akhilesh Yadav's criticism of the BJP government over paper leaks and student suicides.
-2. The new article does not report any development, reaction, preparation, analysis, or consequence connected to the specific occurrence named in the original event's scope. It is a separate event focused on a different issue (floods) and different leaders (Tejashwi Yadav, Narendra Modi, and Samrat Choudhary).
-3. Since the new article is about a genuinely different named occurrence, it should be rejected.
-
-REJECT
-2026-09-29 03:22:07,352 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-29 03:24:06,208 - INFO -   Generated Event Scope: 'This event covers Tejashwi Yadav's criticism of the central and state governments over their handling of the Bihar floods, including reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions by Tejashwi Yadav, Narendra Modi, Samrat Choudhary, and their respective governments unless they are direct developments of this flood-related criticism and response.'
-2026-09-29 03:24:08,619 - INFO -   Created new invisible Event ID 12312.
-2026-09-29 03:24:08,619 - INFO - 
-Processing article ID 121481: 'On Sunday, Manickam Tagore, president of the Tamil Nadu Congress Committee, launched'
-2026-09-29 03:24:08,619 - INFO -   Entities: ['tamil_nadu', 'chennai', 'congress']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 35.85it/s]
-2026-09-29 03:24:08,651 - INFO -   Best similarity match: 0.4972 with Event ID 10798
-2026-09-29 03:26:01,551 - INFO -   Generated Event Scope: 'This event covers the launch of pre-booking for a photo book on Indira Gandhi and the unveiling of the Tamil translation of Jawaharlal Nehru’s *Glimpses of World History* by Manickam Tagore, including any reactions, analyses, and follow-up developments related to these specific actions. It excludes other actions or statements made by Manickam Tagore, the Tamil Nadu Congress Committee, or attendees unless they are directly related to the aforementioned launch and unveiling.'
-2026-09-29 03:26:04,133 - INFO -   Created new invisible Event ID 12313.
-2026-09-29 03:26:04,133 - INFO - 
-Processing article ID 121484: 'Modi's all-vegetarian gala sparks backlash, 80% Indians are non-vegetarian: Gandhi'
-2026-09-29 03:26:04,133 - INFO -   Entities: ['rahul_gandhi', 'bjp', 'narendra_modi', 'delhi', 'congress', 'bihar']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 34.43it/s]
-2026-09-29 03:26:04,166 - INFO -   Best similarity match: 0.7172 with Event ID 12300
-2026-09-29 03:29:58,515 - INFO - Nomination: article_id=121484, event_id=12300, cosine=0.7172, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is not about a genuinely different named occurrence. It specifically addresses the criticism of the BJP for offering a full vegetarian menu at the BRICS summit dinner, which is the exact event described in the scope.
-2. The article reports a development connected to the specific occurrence named in the scope. It details Rahul Gandhi's criticism of the vegetarian menu and the BJP's defense of the menu, which are direct reactions to the event.
-3. The article clearly falls within the scope as it discusses the reactions and criticisms related to the vegetarian menu at the BRICS summit dinner.
-
-Final answer: ATTACH
-2026-09-29 03:29:58,515 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-29 03:30:13,102 - INFO -   Generated Milestone (Attempt 1): 'The BJP hosted an all-vegetarian dinner for BRICS leaders, prompting criticism from the Congress and accusations of imposing dietary preferences.'
-2026-09-29 03:31:16,224 - INFO -   Generated Event Title: 'BJP's All-Vegetarian BRICS Dinner Criticized for Imposing Dietary Preferences' | slug: bjps-all-vegetarian-brics-dinner-criticized-for-imposing-dietary-preferences
-2026-09-29 03:31:22,593 - INFO - [SAGA CHECK] Event 12300: 1244 candidates share >=2 keys; capped to 8 strongest.
-2026-09-29 03:31:22,593 - INFO - [SAGA CHECK] Event 12300: deadline reached after 0/8 calls — returning partial links.
-2026-09-29 03:31:24,943 - INFO -   Attached to Event ID 12300 successfully.
-2026-09-29 03:31:24,943 - INFO - Deadline reached — stopping batch early (per-article checkpoints already committed).
-2026-09-29 03:31:25,412 - INFO - Batch completed. attached=17, has_more=true
-has_more=true
-articles_attached=17
-	Command being timed: "python timeline_pipeline.py --deadline-ts 1790652507 --batch-size 200"
-	User time (seconds): 27497.71
-	System time (seconds): 9.35
-	Percent of CPU this job got: 344%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:13:03
-	Average shared text size (kbytes): 0
-	Average unshared data size (kbytes): 0
-	Average stack size (kbytes): 0
-	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 14553080
-	Average resident set size (kbytes): 0
-	Major (requiring I/O) page faults: 56060
-	Minor (reclaiming a frame) page faults: 785545
-	Voluntary context switches: 188931
-	Involuntary context switches: 3826983
-	Swaps: 0
-	File system inputs: 26456224
-	File system outputs: 180600
-	Socket messages sent: 0
-	Socket messages received: 0
-	Signals delivered: 0
-	Page size (bytes): 4096
-	Exit status: 0
-               total        used        free      shared  buff/cache   available
-Mem:           15989        1026        2515          37       12828       14963
-Swap:           3071          65        3006
-pipeline_exit=0
