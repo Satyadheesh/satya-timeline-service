@@ -146,6 +146,13 @@ jobs:
             exit "$CODE"
           fi
 
+      - name: Backlog status
+        if: ${{ always() }}
+        run: |
+          # Written by the pipeline at the start and end of the run: what is waiting, how far
+          # behind, and this run's pace. Shown on the run's summary page.
+          if [ -f status.md ]; then cat status.md >> "$GITHUB_STEP_SUMMARY"; cat status.md; fi
+
       # Keep the full log readable without GitHub log downloads (run-logs branch).
       - name: Publish run log
         if: ${{ always() }}

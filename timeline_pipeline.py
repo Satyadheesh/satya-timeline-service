@@ -82,6 +82,64 @@ ELIGIBILITY_SQL = """a.status IN ('classified','entity_processed','processed')
                    OR a.cities_mentioned NOT IN ('[]',''))
               AND (a.ministers_mentioned != '[]' OR a.party_mentioned != '[]' OR a.civic_flag = 1)"""
 
+# --- Run status (printed at start and end, and written to status.md for the Actions summary) ---
+IST_OFFSET = 19800
+
+def _ist(ts):
+    return datetime.utcfromtimestamp(int(ts) + IST_OFFSET).strftime('%d %b %H:%M IST') if ts else '?'
+
+def timeline_status(cursor, cursor_id):
+    """Backlog picture for the forward runner: what is waiting to be filed, how far behind the
+    cursor is, and the closure queue. Reads only articles after the cursor (+ an index lookup each)."""
+    tf_clause, tf_params = tracked_match_sql()
+    st = {}
+    cursor.execute("SELECT scraped_at FROM articles WHERE id = ?", (cursor_id,))
+    row = cursor.fetchone()
+    st['cursor_ts'] = int(row[0]) if row and row[0] else 0
+    cursor.execute(f"""
+        SELECT date(a.scraped_at + {IST_OFFSET}, 'unixepoch') AS d, COUNT(*)
+        FROM articles a
+        WHERE a.id > ? AND (({ELIGIBILITY_SQL}) OR {tf_clause})
+          AND a.id NOT IN (SELECT article_id FROM event_articles)
+        GROUP BY d ORDER BY d""", (cursor_id, *tf_params))
+    st['by_day'] = [(r[0], int(r[1])) for r in cursor.fetchall()]
+    st['pending'] = sum(n for _, n in st['by_day'])
+    cursor.execute("SELECT COUNT(*) FROM events WHERE state = 'open'")
+    st['open_events'] = int(cursor.fetchone()[0])
+    cutoff = (st['cursor_ts'] or int(time.time())) - 21 * 24 * 3600
+    cursor.execute("SELECT COUNT(*) FROM events WHERE state = 'open' AND last_seen < ?", (cutoff,))
+    st['closures_due'] = int(cursor.fetchone()[0])
+    return st
+
+def status_lines(title, st, run=None):
+    lag_h = (time.time() - st['cursor_ts']) / 3600 if st['cursor_ts'] else 0
+    days = ', '.join(f"{n} from {datetime.strptime(d, '%Y-%m-%d').strftime('%d %b')}" for d, n in st['by_day']) or 'none'
+    lines = [f"==== TIMELINE STATUS ({title}) ====",
+             f"Up to: articles scraped {_ist(st['cursor_ts'])} ({lag_h:.1f} h behind now)",
+             f"Waiting to be filed: {st['pending']} eligible articles ({days})",
+             f"Open timelines: {st['open_events']} ({st['closures_due']} due for the 21-day closure check)"]
+    if run:
+        mins = max(run['seconds'] / 60, 1)
+        rate = run['processed'] / (mins / 60) if run['processed'] else 0
+        lines.append(f"This run: {run['processed']} articles processed in {mins:.0f} min "
+                     f"({rate:.0f}/hour), {run['attached']} filed into timelines, {run['closures']} timelines closed")
+        if st['pending'] and rate:
+            lines.append(f"At this pace the backlog clears in ~{st['pending'] / rate:.1f} hours of running "
+                         f"(~{st['pending'] / max(run['processed'], 1):.1f} more runs)")
+        elif not st['pending']:
+            lines.append("Caught up: nothing waiting. Next run: the daily schedule (19:00 IST).")
+    lines.append("=" * 40)
+    return lines
+
+def emit_status(lines, path='status.md'):
+    for l in lines:
+        logging.info(l)
+    try:
+        with open(path, 'a', encoding='utf-8') as f:
+            f.write("\n".join(["", *[f"- {l}" if not l.startswith('====') else f"### {l.strip('= ').title()}" for l in lines if not set(l) == {'='}], ""]))
+    except Exception:
+        pass
+
 # --- Tracked figures (simple, local, zero-dependency) ---
 # tracked_figures.txt holds names registered via the Timeline Doctor's name
 # mode (or by hand). The forward runner treats a title match as eligible and
@@ -1125,6 +1183,13 @@ def main():
         except Exception as e:
             logging.error(f"Failed to read checkpoint table: {e}. Starting from ID 0.")
 
+    run_started = time.time()
+    if not SHARD_CTX:
+        try:
+            emit_status(status_lines("start of run", timeline_status(cursor, start_id)))
+        except Exception as e:
+            logging.warning(f"Status check skipped: {e}")
+
     # 2. Fetch Batch
     logging.info(f"Fetching up to {batch_size} articles after cursor (id {start_id})...")
     try:
@@ -1346,6 +1411,7 @@ def main():
         sys.exit(1)
 
     attached_count = 0
+    processed_count = 0
     last_processed_id = start_id
     last_processed_sa = start_sa
     max_scraped_at = 0
@@ -1356,6 +1422,7 @@ def main():
             logging.info("Deadline reached — stopping batch early (per-article checkpoints already committed).")
             break
         art_id = int(row[0])
+        processed_count += 1
         orig_title = row[1] or ""
         reph_title = row[2] or orig_title
         decompressed_article = decompress_text(row[3])
@@ -1781,6 +1848,14 @@ def main():
             conn, _ = run_write_burst_with_reconnect(conn, _mark_shard_done)
             shard_done = "true"
             logging.info(f"[SHARD {SHARD_CTX['shard']}] SEALED — shard complete.")
+
+    if not SHARD_CTX and not args.dry_run:
+        try:
+            emit_status(status_lines("end of run", timeline_status(conn.cursor(), last_processed_id), run={
+                'processed': processed_count, 'attached': attached_count, 'closures': closures_done,
+                'seconds': time.time() - run_started}))
+        except Exception as e:
+            logging.warning(f"Status check skipped: {e}")
 
     # Close connection
     try:
