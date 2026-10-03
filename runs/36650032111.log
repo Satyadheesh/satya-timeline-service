@@ -1,345 +1,0 @@
-2026-09-30 00:36:18,249 - INFO - Internal runtime timer active: soft deadline set for 02:46:17 UTC (max 130 mins).
-2026-09-30 00:36:18,249 - INFO - Pipeline started. dry_run=False, batch_size=200, sim_threshold=0.6
-2026-09-30 00:36:18,261 - INFO - Connecting to remote Turso Database at: libsql://satya-db-yashveer0723.aws-ap-south-1.turso.io
-2026-09-30 00:36:19,507 - INFO - Loaded cursor from DB. Last processed article ID: 122464
-2026-09-30 00:36:19,508 - INFO - Fetching up to 200 articles after cursor (id 122464)...
-2026-09-30 00:36:42,944 - INFO - Loading sentence-transformers/all-MiniLM-L6-v2...
-2026-09-30 00:36:42,945 - INFO - No device provided, using cpu
-2026-09-30 00:36:43,078 - INFO - HTTP Request: GET https://huggingface.co/api/agent-harnesses "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,122 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-2026-09-30 00:36:43,122 - WARNING - Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-2026-09-30 00:36:43,136 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,152 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,203 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:43,216 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,230 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,231 - INFO - Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
-2026-09-30 00:36:43,272 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:43,286 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,330 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:43,344 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2FREADME.md=&etag=%2244af2e3b0fa3a0b6239e48422972bf755f28fde0%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,358 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2FREADME.md=&etag=%2244af2e3b0fa3a0b6239e48422972bf755f28fde0%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,403 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:43,418 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,463 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:43,477 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fsentence_bert_config.json=&etag=%2259d594003bf59880a884c574bf88ef7555bb0202%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,494 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fsentence_bert_config.json=&etag=%2259d594003bf59880a884c574bf88ef7555bb0202%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,541 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
-2026-09-30 00:36:43,587 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:43,602 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,617 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:43,689 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/model.safetensors "HTTP/1.1 302 Found"
-2026-09-30 00:36:43,756 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/xet-read-token/1110a243fdf4706b3f48f1d95db1a4f5529b4d41 "HTTP/1.1 200 OK"
-Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 5526.73it/s]
-2026-09-30 00:36:45,624 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
-2026-09-30 00:36:45,676 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-30 00:36:45,723 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-30 00:36:45,770 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-30 00:36:45,819 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:45,833 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:45,848 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:45,897 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:45,910 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:45,957 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:45,974 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,020 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:46,034 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,082 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
-2026-09-30 00:36:46,128 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,173 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/vocab.txt "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:46,187 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fvocab.txt=&etag=%22fb140275c155a9c7c5a3b3e0e77a9e839594a938%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,202 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fvocab.txt=&etag=%22fb140275c155a9c7c5a3b3e0e77a9e839594a938%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,262 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:46,276 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer.json=&etag=%22cb202bfe2e3c98645018a6d12f182a434c9d3e02%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,289 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Ftokenizer.json=&etag=%22cb202bfe2e3c98645018a6d12f182a434c9d3e02%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,357 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
-2026-09-30 00:36:46,402 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/special_tokens_map.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:46,418 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/special_tokens_map.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fspecial_tokens_map.json=&etag=%22e7b0375001f109a6b8873d756ad4f7bbb15fbaa5%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,432 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/special_tokens_map.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fspecial_tokens_map.json=&etag=%22e7b0375001f109a6b8873d756ad4f7bbb15fbaa5%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,479 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
-2026-09-30 00:36:46,560 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 00:36:46,577 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2F1_Pooling%2Fconfig.json=&etag=%22d1514c3162bbe87b343f565fadc62e6c06f04f03%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,591 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2F1_Pooling%2Fconfig.json=&etag=%22d1514c3162bbe87b343f565fadc62e6c06f04f03%22 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,648 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/2_Normalize/config.json "HTTP/1.1 404 Not Found"
-2026-09-30 00:36:46,701 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
-2026-09-30 00:36:46,718 - INFO - Loading Gemma 2B from ./models/gemma-2-2b-it-Q4_K_M.gguf...
-llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
-2026-09-30 00:36:56,722 - INFO - Loading Qwen 14B from ./models/Qwen2.5-14B-Instruct-Q5_K_M.gguf...
-2026-09-30 00:38:08,554 - INFO - 
-Running chapter closure sweep relative to logical clock cutoff: 1787748483...
-2026-09-30 00:38:10,072 - INFO - Found 60 events to close (closure budget until 01:28:17).
-2026-09-30 00:38:10,072 - INFO - Closing Event ID 11894...
-2026-09-30 00:38:13,015 - INFO - Event ID 11894 closed successfully.
-2026-09-30 00:38:13,015 - INFO - Closing Event ID 11895...
-2026-09-30 00:38:15,287 - INFO - Event ID 11895 closed successfully.
-2026-09-30 00:38:15,287 - INFO - Closing Event ID 11896...
-2026-09-30 00:38:17,590 - INFO - Event ID 11896 closed successfully.
-2026-09-30 00:38:17,590 - INFO - Closing Event ID 9809...
-2026-09-30 00:38:19,563 - INFO - [BATCH AUDIT] Event 9809: auditing articles 1-10 of 10 in one call...
-2026-09-30 00:49:00,681 - WARNING - [BATCH AUDIT] Event 9809: no parsable verdict — keeping all articles in this chunk. Raw: Let's analyze each article to determine if it falls within the event's scope:
-
-1. **81251: Sheikh Hasina Plans Voluntary Return to Bangladesh by December Despite Death Sentence**
-   - This article dir
-2026-09-30 00:49:00,681 - INFO - [BATCH AUDIT] Event 9809: chunk verdict — keep 10, evict 0.
-2026-09-30 00:49:08,853 - INFO - [SAGA CHECK] Event 9809: 1104 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 00:49:09,305 - INFO - [SAGA CHECK] Event 9809 vs closed Event 10322 (1/8, 7 shared keys)...
-2026-09-30 00:50:43,743 - INFO - [SAGA CHECK] Event 9809 vs closed Event 9027 (2/8, 7 shared keys)...
-2026-09-30 00:52:03,239 - INFO - [SAGA CHECK] Event 9809 vs closed Event 10445 (3/8, 7 shared keys)...
-2026-09-30 00:53:19,153 - INFO - [SAGA CHECK] Event 9809 vs closed Event 10522 (4/8, 7 shared keys)...
-2026-09-30 00:54:06,646 - INFO - [SAGA CHECK] Event 9809 vs closed Event 9674 (5/8, 7 shared keys)...
-2026-09-30 00:55:25,077 - INFO - [SAGA CHECK] Event 9809 vs closed Event 3815 (6/8, 7 shared keys)...
-2026-09-30 00:56:49,840 - INFO - [SAGA CHECK] Event 9809 vs closed Event 2076 (7/8, 7 shared keys)...
-2026-09-30 00:58:14,103 - INFO - [SAGA CHECK] Event 9809 vs closed Event 1707 (8/8, 7 shared keys)...
-2026-09-30 01:04:26,798 - INFO -   [REFRAME] Event 9809 re-titled from 10 milestones: 'Bangladesh-India Relations Strained Over Sheikh Hasina Extradition'
-2026-09-30 01:04:27,044 - INFO - Event ID 9809 closed successfully.
-2026-09-30 01:04:27,044 - INFO - Closing Event ID 11897...
-2026-09-30 01:04:29,856 - INFO - Event ID 11897 closed successfully.
-2026-09-30 01:04:29,856 - INFO - Closing Event ID 11898...
-2026-09-30 01:04:32,194 - INFO - Event ID 11898 closed successfully.
-2026-09-30 01:04:32,194 - INFO - Closing Event ID 11899...
-2026-09-30 01:04:34,497 - INFO - Event ID 11899 closed successfully.
-2026-09-30 01:04:34,498 - INFO - Closing Event ID 11900...
-2026-09-30 01:04:36,836 - INFO - Event ID 11900 closed successfully.
-2026-09-30 01:04:36,836 - INFO - Closing Event ID 11902...
-2026-09-30 01:04:39,137 - INFO - Event ID 11902 closed successfully.
-2026-09-30 01:04:39,137 - INFO - Closing Event ID 11903...
-2026-09-30 01:04:41,473 - INFO - Event ID 11903 closed successfully.
-2026-09-30 01:04:41,473 - INFO - Closing Event ID 11549...
-2026-09-30 01:04:48,301 - INFO - [SAGA CHECK] Event 11549: 1010 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 01:04:48,755 - INFO - [SAGA CHECK] Event 11549 vs closed Event 4884 (1/8, 8 shared keys)...
-2026-09-30 01:06:30,136 - INFO - [SAGA CHECK] Event 11549 vs closed Event 11519 (2/8, 7 shared keys)...
-2026-09-30 01:07:56,581 - INFO - [SAGA CHECK] Event 11549 vs closed Event 11103 (3/8, 7 shared keys)...
-2026-09-30 01:09:23,857 - INFO - [SAGA CHECK] Event 11549 vs closed Event 9814 (4/8, 7 shared keys)...
-2026-09-30 01:10:51,804 - INFO - [SAGA CHECK] Event 11549 vs closed Event 7717 (5/8, 7 shared keys)...
-2026-09-30 01:12:20,227 - INFO - [SAGA CHECK] Event 11549 vs closed Event 4597 (6/8, 7 shared keys)...
-2026-09-30 01:13:49,032 - INFO - [SAGA CHECK] Event 11549 vs closed Event 2971 (7/8, 7 shared keys)...
-2026-09-30 01:15:25,549 - INFO - [SAGA CHECK] Event 11549 vs closed Event 10610 (8/8, 6 shared keys)...
-2026-09-30 01:16:53,279 - INFO - Event ID 11549 closed successfully.
-2026-09-30 01:16:53,280 - INFO - Closing Event ID 11904...
-2026-09-30 01:16:55,709 - INFO - Event ID 11904 closed successfully.
-2026-09-30 01:16:55,709 - INFO - Closing Event ID 11905...
-2026-09-30 01:16:58,038 - INFO - Event ID 11905 closed successfully.
-2026-09-30 01:16:58,038 - INFO - Closing Event ID 9959...
-2026-09-30 01:17:00,394 - INFO - [BATCH AUDIT] Event 9959: auditing articles 1-6 of 6 in one call...
-2026-09-30 01:27:25,316 - WARNING - [BATCH AUDIT] Event 9959: no parsable verdict — keeping all articles in this chunk. Raw: Let's analyze each article to determine if it falls within the event's scope:
-
-1. **82715: Telangana Chief Minister Accuses Predecessors of Corruption in Drought Crisis**
-   - This article directly ad
-2026-09-30 01:27:25,316 - INFO - [BATCH AUDIT] Event 9959: chunk verdict — keep 6, evict 0.
-2026-09-30 01:27:33,141 - INFO - [SAGA CHECK] Event 9959: 943 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 01:27:33,593 - INFO - [SAGA CHECK] Event 9959 vs closed Event 8980 (1/8, 7 shared keys)...
-2026-09-30 01:29:19,806 - INFO - [SAGA CHECK] Event 9959 vs closed Event 8012 (2/8, 7 shared keys)...
-2026-09-30 01:30:53,848 - INFO - [SAGA CHECK] Event 9959 vs closed Event 3073 (3/8, 7 shared keys)...
-2026-09-30 01:32:27,493 - INFO - [SAGA CHECK] Event 9959 vs closed Event 1957 (4/8, 7 shared keys)...
-2026-09-30 01:34:02,022 - INFO - [SAGA CHECK] Event 9959 vs closed Event 1251 (5/8, 7 shared keys)...
-2026-09-30 01:35:28,406 - INFO - [SAGA CHECK] Event 9959 vs closed Event 1052 (6/8, 7 shared keys)...
-2026-09-30 01:36:43,987 - INFO - [SAGA CHECK] Event 9959 vs closed Event 9906 (7/8, 6 shared keys)...
-2026-09-30 01:38:10,851 - INFO - [SAGA CHECK] Event 9959 vs closed Event 10064 (8/8, 6 shared keys)...
-2026-09-30 01:44:50,105 - INFO -   [REFRAME] Event 9959 re-titled from 6 milestones: 'Telangana Water Rights and Corruption Disputes'
-2026-09-30 01:44:50,349 - INFO - Event ID 9959 closed successfully.
-2026-09-30 01:44:50,349 - INFO - Closure budget used — remaining closures resume on next run.
-2026-09-30 01:44:50,349 - INFO - 
-Checking for historical NULL milestones to backfill...
-2026-09-30 01:44:51,030 - INFO - Running NULL milestone sweep for 20 articles...
-2026-09-30 01:54:21,832 - INFO - Successfully backfilled 20 NULL milestones.
-2026-09-30 01:54:24,533 - INFO - Loaded 500 candidate events (0 recently-closed, reopenable).
-2026-09-30 01:54:24,538 - INFO - 
-Processing article ID 122472: 'Teen escapes, leads to arrest of eight in Hyderabad sexual assault case'
-2026-09-30 01:54:24,539 - INFO -   Entities: ['hyderabad']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:02<00:00,  2.26s/it]Batches: 100%|██████████| 1/1 [00:02<00:00,  2.26s/it]
-2026-09-30 01:54:27,260 - INFO -   Best similarity match: 0.4505 with Event ID 12114
-2026-09-30 01:57:22,738 - INFO -   Generated Event Scope: 'This event covers the sexual assault of a 16-year-old girl in Hyderabad, starting on September 9, her escape and reporting to the police on September 10, and the subsequent arrests of eight individuals under the POCSO Act and BNS provisions, including reactions, analyses, and follow-up developments related to this specific incident. It excludes other actions or crimes committed by the accused or any related parties unless they are directly connected to and are developments of the September 9 sexual assault incident.'
-2026-09-30 01:57:25,094 - INFO -   Created new invisible Event ID 12379.
-2026-09-30 01:57:25,094 - INFO - 
-Processing article ID 122473: 'Telangana CM forms committee to fix land record anomalies in 30 days'
-2026-09-30 01:57:25,094 - INFO -   Entities: ['congress', 'telangana']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 23.47it/s]
-2026-09-30 01:57:25,140 - INFO -   Best similarity match: 0.7585 with Event ID 10995
-2026-09-30 02:02:21,909 - INFO - Nomination: article_id=122473, event_id=10995, cosine=0.7585, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is not about a genuinely different named occurrence. It is still focused on the controversy over land sale restrictions and the reactions to them, which is the core of the event.
-2. The article reports a development connected to the specific occurrence named in the scope. The Chief Minister's announcement of a committee to address land record anomalies and protect genuine landowners is a direct reaction and development of the ongoing protest and criticism against the land sale restrictions.
-3. The article clearly falls within the scope of the event as it deals with the follow-up actions taken by the government in response to the land sale restrictions issue.
-
-Final answer: ATTACH
-2026-09-30 02:02:21,909 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-30 02:02:36,979 - INFO -   Generated Milestone (Attempt 1): 'Telangana's Chief Minister formed a committee to resolve the controversy over Section 22A lands, aiming to protect landowners from clerical errors.'
-2026-09-30 02:02:39,590 - INFO -   Attached to Event ID 10995 successfully.
-2026-09-30 02:02:39,590 - INFO - 
-Processing article ID 122479: 'India declares Shahzad Bhatti Network terrorist organisation under UAPA'
-2026-09-30 02:02:39,590 - INFO -   Entities: ['narendra_modi', 'amit_shah']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 22.01it/s]
-2026-09-30 02:02:39,638 - INFO -   Best similarity match: 0.5166 with Event ID 11991
-2026-09-30 02:04:49,488 - INFO -   Generated Event Scope: 'This event covers the declaration of the Shahzad Bhatti Network as a terrorist organisation under India's Unlawful Activities (Prevention) Act, including any reactions, analyses, and follow-up developments related to this specific action. It excludes other actions or declarations by the Indian government or the Shahzad Bhatti Network unless they are direct developments or responses to this particular designation.'
-2026-09-30 02:04:51,973 - INFO -   Created new invisible Event ID 12380.
-2026-09-30 02:04:52,020 - INFO - 
-Processing article ID 122496: 'In a video on X, a Tesla enthusiast shows the new matte'
-2026-09-30 02:04:52,020 - INFO -   Entities: ['congress']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  4.12it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  4.11it/s]
-2026-09-30 02:04:52,330 - INFO -   Best similarity match: 0.2684 with Event ID 12121
-2026-09-30 02:06:55,204 - INFO -   Generated Event Scope: 'This event covers the unveiling of the new matte gold Cybercab by a Tesla enthusiast in a video on X, including any reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions or announcements by Tesla, governments, or related parties unless they directly pertain to the new matte gold Cybercab or the issues raised in the video.'
-2026-09-30 02:06:57,919 - INFO -   Created new invisible Event ID 12381.
-2026-09-30 02:06:57,931 - INFO - 
-Processing article ID 122538: 'Trump praises Modi's anti-opium efforts, notes India still on US drug watch list'
-2026-09-30 02:06:57,931 - INFO -   Entities: ['narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  6.62it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  6.61it/s]
-2026-09-30 02:06:58,112 - INFO -   Best similarity match: 0.5393 with Event ID 10900
-2026-09-30 02:08:57,823 - INFO -   Generated Event Scope: 'This event covers US President Donald Trump's comments welcoming Prime Minister Narendra Modi's efforts against opium production and noting India's continued presence on the US drug watch list, including any reactions, analyses, and follow-up developments related to these remarks. It excludes other actions or statements by Trump, Modi, or their administrations unless they are direct responses or developments stemming from this specific occurrence.'
-2026-09-30 02:09:00,133 - INFO -   Created new invisible Event ID 12382.
-2026-09-30 02:09:00,159 - INFO - 
-Processing article ID 122542: 'CBI registers case against TTI, six for withdrawing ₹92.55 crore using foreign cards'
-2026-09-30 02:09:00,159 - INFO -   Entities: ['chhattisgarh', 'assam', 'bangalore', 'karnataka', 'bengaluru']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 20.45it/s]
-2026-09-30 02:09:00,211 - INFO -   Best similarity match: 0.4967 with Event ID 12218
-2026-09-30 02:11:20,079 - INFO -   Generated Event Scope: 'This event covers the CBI registering a case against TTI and six individuals for allegedly withdrawing ₹92.55 crore using foreign cards without FCRA registration, including any reactions, analyses, and follow-up developments related to this specific occurrence. It excludes other actions by TTI, the accused individuals, or the CBI unless they are direct developments or consequences of this particular case.'
-2026-09-30 02:11:22,418 - INFO -   Created new invisible Event ID 12383.
-2026-09-30 02:11:22,432 - INFO - 
-Processing article ID 122558: 'EPFO Wage Ceiling Hiked to ₹25,000, Covering 51 Lakh More Workers'
-2026-09-30 02:11:22,432 - INFO -   Entities: ['congress']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  9.61it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  9.60it/s]
-2026-09-30 02:11:22,538 - INFO -   Best similarity match: 0.4141 with Event ID 11702
-2026-09-30 02:13:44,424 - INFO -   Generated Event Scope: 'This event covers the Union Cabinet's approval to raise the EPFO wage ceiling to ₹25,000, effective September 17, 2026, and includes reactions, analyses, and follow-up developments related to this decision. It excludes other actions by the Union Cabinet, Labour Minister Mansukh Mandaviya, trade unions, and employers unless they are direct developments of this specific wage ceiling hike.'
-2026-09-30 02:13:46,948 - INFO -   Created new invisible Event ID 12384.
-2026-09-30 02:13:46,948 - INFO - 
-Processing article ID 122565: 'Modi urges CEOs: Join India’s semiconductor leap, tap AI and quantum computing'
-2026-09-30 02:13:46,948 - INFO -   Entities: ['narendra_modi', 'pm_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 39.56it/s]
-2026-09-30 02:13:47,051 - INFO -   Best similarity match: 0.5728 with Event ID 12022
-2026-09-30 02:15:48,939 - INFO -   Generated Event Scope: 'This event covers the roundtable meeting where Prime Minister Narendra Modi urged leading CEOs to participate in India's semiconductor growth and emphasized collaboration in AI and quantum computing, including any reactions, analyses, and follow-up developments from this specific occurrence. It excludes other actions or meetings by the same individuals or organizations unless they are direct developments or responses to this particular roundtable event.'
-2026-09-30 02:15:51,639 - INFO -   Created new invisible Event ID 12385.
-2026-09-30 02:15:51,639 - INFO - 
-Processing article ID 122571: 'BJP, BSP Clashes Over Ambedkar Statue Leave Senior Leader Vijay Sampla Injured'
-2026-09-30 02:15:51,639 - INFO -   Entities: ['bsp', 'punjab', 'bjp', 'aap']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 25.70it/s]
-2026-09-30 02:15:51,681 - INFO -   Best similarity match: 0.5506 with Event ID 9882
-2026-09-30 02:18:08,561 - INFO -   Generated Event Scope: 'This event covers the clash between BJP and BSP workers over alleged tampering with Dr BR Ambedkar’s statue in Hoshiarpur's Barian Kalan village, including reactions, analyses, and follow-up developments related to the incident and the injury of senior BJP leader Vijay Sampla. It excludes other actions by BJP, BSP, or in the region of Hoshiarpur unless they are direct developments of this specific occurrence.'
-2026-09-30 02:18:11,076 - INFO -   Created new invisible Event ID 12386.
-2026-09-30 02:18:11,113 - INFO - 
-Processing article ID 122573: 'Rajasthan begins electing mayors and chairpersons for 305 urban bodies'
-2026-09-30 02:18:11,113 - INFO -   Entities: ['congress', 'rajasthan', 'bjp', 'jaipur']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  6.42it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  6.42it/s]
-2026-09-30 02:18:11,272 - INFO -   Best similarity match: 0.7388 with Event ID 12334
-2026-09-30 02:23:15,753 - INFO - Nomination: article_id=122573, event_id=12334, cosine=0.7388, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The new article is not about a genuinely different named occurrence. It is still focused on the aftermath of the Rajasthan Urban Local Body Elections, which is the named event in question.
-2. The article reports on the process of electing mayors and chairpersons for the urban local bodies, which is a direct development following the initial election results. This is a clear continuation of the event's scope, which includes reactions, analyses, and follow-up developments of the election results.
-3. The article is clearly connected to the specific occurrence named in the event scope, as it deals with the immediate aftermath and follow-up actions related to the election results.
-
-Based on the above reasoning, the article falls within the event's scope.
-
-ATTACH
-2026-09-30 02:23:15,753 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-30 02:23:31,251 - INFO -   Generated Milestone (Attempt 1): 'Candidates from various political parties and independents filed 989 nominations for mayors and chairpersons in Rajasthan's 305 urban local bodies.'
-2026-09-30 02:23:33,670 - INFO -   Attached to Event ID 12334 successfully.
-2026-09-30 02:23:33,671 - INFO - 
-Processing article ID 122578: 'Congress rift deepens as Selvaperunthagai clashes with Chakravarty over Gandhi leadership'
-2026-09-30 02:23:33,671 - INFO -   Entities: ['rahul_gandhi', 'tamil_nadu', 'amit_shah', 'congress', 'pm_modi', 'narendra_modi', 'bjp']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 14.61it/s]
-2026-09-30 02:23:33,742 - INFO -   Best similarity match: 0.6126 with Event ID 10119
-2026-09-30 02:28:26,504 - INFO - Nomination: article_id=122578, event_id=10119, cosine=0.6126, vote=REJECT | Raw: Step-by-step reasoning:
-
-1. The new article is about a clash between K. Selvaperunthagai and Praveen Chakravarty over the leadership of Rahul Gandhi within the Congress party. This is a separate occurrence from the swearing-in ceremony of C. Joseph Vijay as the Chief Minister of Tamil Nadu.
-2. The article does not report any development, reaction, preparation, analysis, or consequence connected to the specific swearing-in ceremony of C. Joseph Vijay.
-3. Since the article is about a genuinely different named occurrence and does not relate to the specific event covered by the scope, it should be rejected.
-
-REJECT
-2026-09-30 02:28:26,504 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-30 02:31:05,930 - INFO -   Generated Event Scope: 'This event covers the public disagreement between K. Selvaperunthagai and Praveen Chakravarty over the leadership of Rahul Gandhi and the potential alliance strategies of the Congress party, including any reactions, analyses, and follow-up developments related to this specific clash. It excludes other actions or statements made by K. Selvaperunthagai, Praveen Chakravarty, or the Congress party unless they are direct developments or responses to this particular disagreement.'
-2026-09-30 02:31:08,506 - INFO -   Created new invisible Event ID 12387.
-2026-09-30 02:31:08,506 - INFO - 
-Processing article ID 122619: 'Inspired by President Donald Trump renaming lakes, Cleaveland council passed a satiric'
-2026-09-30 02:31:08,506 - INFO -   Entities: ['congress']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  8.12it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  8.10it/s]
-2026-09-30 02:31:08,698 - INFO -   Best similarity match: 0.7358 with Event ID 12248
-2026-09-30 02:35:45,982 - INFO - Nomination: article_id=122619, event_id=12248, cosine=0.7358, vote=ATTACH | Raw: Step-by-step reasoning:
-1. The article is not about a genuinely different named occurrence. It is still centered around the renaming of Lake Erie, which is the core of the event initiated by David Maloney's proposal.
-2. The article reports a development connected to the specific occurrence named in the scope. The Cleaveland council's satiric resolution to rename Lake Erie as the "Gulf of Cleaveland" is a reaction to the trend of renaming lakes, inspired by President Trump's actions and David Maloney's proposal.
-3. The article clearly falls within the scope of the event as it discusses a reaction to the renaming proposal and its broader context.
-
-Final answer: ATTACH
-2026-09-30 02:35:45,982 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-30 02:36:07,544 - INFO -   Generated Milestone (Attempt 3): 'The Cleaveland City Council passed a satirical resolution to rename Lake Erie as the "Gulf of Cleaveland," intending to mock the trend of renaming bodies of water.'
-2026-09-30 02:37:06,271 - INFO -   Generated Event Title: 'Pennsylvania Proposal Mocked in Lake Erie Renaming Trend' | slug: pennsylvania-proposal-mocked-in-lake-erie-renaming-trend
-2026-09-30 02:37:21,384 - INFO -   Attached to Event ID 12248 successfully.
-2026-09-30 02:37:21,456 - INFO - 
-Processing article ID 122660: 'Indian student dies in US; family seeks minister's help to repatriate body'
-2026-09-30 02:37:21,456 - INFO -   Entities: ['hyderabad', 's_jaishankar']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 10.69it/s]
-2026-09-30 02:37:21,555 - INFO -   Best similarity match: 0.4461 with Event ID 12241
-2026-09-30 02:39:59,332 - INFO -   Generated Event Scope: 'This event covers the death of Mohammed Jaber Hussain, a 27-year-old Indian student in the US, and includes reactions, analyses, and follow-up developments related to his family's efforts to repatriate his remains. It excludes other actions or events involving Hussain, his family, the Indian government, or US authorities unless they are direct developments of his death and the subsequent efforts to repatriate his body.'
-2026-09-30 02:40:01,740 - INFO -   Created new invisible Event ID 12388.
-2026-09-30 02:40:01,741 - INFO - 
-Processing article ID 122685: 'Windows 10 update enhances privacy, integrates better with Microsoft cloud services'
-2026-09-30 02:40:01,741 - INFO -   Entities: ['sp']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 71.60it/s]
-2026-09-30 02:40:01,757 - INFO -   Best similarity match: 0.1722 with Event ID 12119
-2026-09-30 02:41:32,053 - INFO -   Generated Event Scope: 'This event covers the October 12 announcement by Microsoft regarding the new Windows 10 update, including its reactions, analyses, and follow-up developments; it excludes other actions or updates by Microsoft unless they are directly related to or developments of this specific update.'
-2026-09-30 02:41:34,364 - INFO -   Created new invisible Event ID 12389.
-2026-09-30 02:41:34,364 - INFO - 
-Processing article ID 122715: 'Defense Department Allows UAP Whistleblowers to Speak to White House Without Legal Fears'
-2026-09-30 02:41:34,364 - INFO -   Entities: ['nda']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 29.54it/s]
-2026-09-30 02:41:34,401 - INFO -   Best similarity match: 0.3458 with Event ID 12087
-2026-09-30 02:43:51,506 - INFO -   Generated Event Scope: 'This event covers the Defense Department's issuance of a "targeted legal waiver" on September 14, allowing UAP-related whistleblowers to disclose information to the White House's PURSUE team without legal repercussions, including any reactions, analyses, and follow-up developments related to this specific action. It excludes other actions by the Defense Department, White House, or whistleblowers unless they are direct developments or consequences of this specific waiver.'
-2026-09-30 02:43:53,847 - INFO -   Created new invisible Event ID 12390.
-2026-09-30 02:43:53,847 - INFO - 
-Processing article ID 122724: 'Garrett Langley, CEO of Flock, initially made the company's first license plate'
-2026-09-30 02:43:53,847 - INFO -   Entities: ['congress']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 60.81it/s]
-2026-09-30 02:43:53,867 - INFO -   Best similarity match: 0.4587 with Event ID 12354
-2026-09-30 02:45:55,086 - INFO -   Generated Event Scope: 'This event covers Garrett Langley, CEO of Flock, initially making the company's first license plate cameras in his Atlanta home and the subsequent reactions, analyses, and follow-up developments, including public backlash and congressional scrutiny over the company's supply chain. It excludes other actions by Garrett Langley, Flock, or related parties unless they are direct developments of this specific occurrence.'
-2026-09-30 02:45:57,496 - INFO -   Created new invisible Event ID 12391.
-2026-09-30 02:45:57,497 - INFO - 
-Processing article ID 122730: 'Indian PM Urges Industry: "Skill and Innovate" at Semicon India 2026'
-2026-09-30 02:45:57,497 - INFO -   Entities: ['gujarat', 'narendra_modi', 'pm_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.62it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.62it/s]
-2026-09-30 02:45:57,776 - INFO -   Best similarity match: 0.6759 with Event ID 12385
-2026-09-30 02:50:44,279 - INFO - Nomination: article_id=122730, event_id=12385, cosine=0.6759, vote=ATTACH | Raw: Step-by-step reasoning:
-
-1. The article is not about a genuinely different named occurrence. It is related to the roundtable meeting where Prime Minister Modi urged CEOs to participate in India's semiconductor growth and emphasized collaboration in AI and quantum computing. The article discusses the same event, Semicon India 2026, where Modi's message was delivered.
-   
-2. The article reports on the market reactions and the government's push for semiconductor manufacturing, which are direct consequences of the roundtable meeting. It highlights the industry's response to Modi's urging and showcases the semiconductor value chain, which is a direct follow-up to the event's scope.
-
-Based on the above reasoning, the article falls within the scope of the event.
-
-ATTACH
-2026-09-30 02:50:44,279 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-30 02:51:00,692 - INFO -   Milestone validation failed (Critic rejected Attempt 1/3): 'Semiconductor companies Kaynes Technology, Syrma SGS Technology, and MosChip Technologies experienced significant stock price increases following Prime Minister Modi's inauguration of Semicon India 2026.'
-2026-09-30 02:51:17,237 - INFO -   Milestone validation failed (Critic rejected Attempt 2/3): 'Semiconductor companies Kaynes Technology, Syrma SGS Technology, and MosChip Technologies experienced significant stock price increases following Prime Minister Modi's inauguration of Semicon India 2026.'
-2026-09-30 02:51:32,636 - INFO -   Generated Milestone (Attempt 3): 'Semiconductor companies Kaynes Technology, Syrma SGS Technology, and MosChip Technologies experienced significant stock price increases at Semicon India 2026.'
-2026-09-30 02:52:28,967 - INFO -   Generated Event Title: 'Semiconductor Companies Experience Stock Price Increases at Semicon India 2026' | slug: semiconductor-companies-experience-stock-price-increases-at-semicon-india-2026
-2026-09-30 02:52:36,177 - INFO - [SAGA CHECK] Event 12385: 311 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 02:52:36,177 - INFO - [SAGA CHECK] Event 12385: deadline reached after 0/8 calls — returning partial links.
-2026-09-30 02:52:38,467 - INFO -   Attached to Event ID 12385 successfully.
-2026-09-30 02:52:38,468 - INFO - Deadline reached — stopping batch early (per-article checkpoints already committed).
-2026-09-30 02:52:38,936 - INFO - Batch completed. attached=17, has_more=true
-has_more=true
-articles_attached=17
-	Command being timed: "python timeline_pipeline.py --deadline-ts 1790736377 --batch-size 200"
-	User time (seconds): 25347.67
-	System time (seconds): 8.53
-	Percent of CPU this job got: 308%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:16:54
-	Average shared text size (kbytes): 0
-	Average unshared data size (kbytes): 0
-	Average stack size (kbytes): 0
-	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 14302972
-	Average resident set size (kbytes): 0
-	Major (requiring I/O) page faults: 61104
-	Minor (reclaiming a frame) page faults: 1012152
-	Voluntary context switches: 224355
-	Involuntary context switches: 2755524
-	Swaps: 0
-	File system inputs: 26216168
-	File system outputs: 180600
-	Socket messages sent: 0
-	Socket messages received: 0
-	Signals delivered: 0
-	Page size (bytes): 4096
-	Exit status: 0
-               total        used        free      shared  buff/cache   available
-Mem:           15988         997        2072          37       13300       14990
-Swap:           3071         112        2959
-pipeline_exit=0
