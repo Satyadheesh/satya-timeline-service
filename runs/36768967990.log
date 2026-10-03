@@ -1,394 +1,0 @@
-2026-09-30 20:02:40,038 - INFO - Internal runtime timer active: soft deadline set for 22:12:38 UTC (max 130 mins).
-2026-09-30 20:02:40,038 - INFO - Pipeline started. dry_run=False, batch_size=200, sim_threshold=0.6
-2026-09-30 20:02:40,164 - INFO - Connecting to remote Turso Database at: libsql://satya-db-yashveer0723.aws-ap-south-1.turso.io
-2026-09-30 20:02:41,743 - INFO - Loaded cursor from DB. Last processed article ID: 123889
-2026-09-30 20:02:41,744 - INFO - Fetching up to 200 articles after cursor (id 123889)...
-2026-09-30 20:02:57,698 - INFO - Loading sentence-transformers/all-MiniLM-L6-v2...
-2026-09-30 20:02:57,699 - INFO - No device provided, using cpu
-2026-09-30 20:02:57,831 - INFO - HTTP Request: GET https://huggingface.co/api/agent-harnesses "HTTP/1.1 200 OK"
-2026-09-30 20:02:57,879 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-2026-09-30 20:02:57,880 - WARNING - Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-2026-09-30 20:02:57,896 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:57,912 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:57,960 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:02:57,976 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:57,991 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:57,992 - INFO - Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
-2026-09-30 20:02:58,036 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:02:58,051 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22fd1b291129c607e5d49799f87cb219b27f98acdf%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:58,097 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:02:58,113 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2FREADME.md=&etag=%2244af2e3b0fa3a0b6239e48422972bf755f28fde0%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:58,129 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2FREADME.md=&etag=%2244af2e3b0fa3a0b6239e48422972bf755f28fde0%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:58,177 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:02:58,193 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22952a9b81c0bfd99800fabf352f69c7ccd46c5e43%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:58,235 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:02:58,252 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fsentence_bert_config.json=&etag=%2259d594003bf59880a884c574bf88ef7555bb0202%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:58,267 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2Fsentence_bert_config.json=&etag=%2259d594003bf59880a884c574bf88ef7555bb0202%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:58,319 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
-2026-09-30 20:02:58,367 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
-2026-09-30 20:02:58,490 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:02:58,506 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2F1110a243fdf4706b3f48f1d95db1a4f5529b4d41%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:58,521 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2F1110a243fdf4706b3f48f1d95db1a4f5529b4d41%2Fconfig.json=&etag=%2272b987fd805cfa2b58c4c8c952b274a11bfd5a00%22 "HTTP/1.1 200 OK"
-2026-09-30 20:02:58,570 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
-2026-09-30 20:02:58,640 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors "HTTP/1.1 302 Found"
-2026-09-30 20:02:58,705 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/xet-read-token/1110a243fdf4706b3f48f1d95db1a4f5529b4d41 "HTTP/1.1 200 OK"
-Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 4439.65it/s]
-2026-09-30 20:03:00,150 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,202 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/processor_config.json "HTTP/1.1 404 Not Found"
-2026-09-30 20:03:00,244 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-30 20:03:00,289 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
-2026-09-30 20:03:00,333 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:03:00,348 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2F1110a243fdf4706b3f48f1d95db1a4f5529b4d41%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,363 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2F1110a243fdf4706b3f48f1d95db1a4f5529b4d41%2Ftokenizer_config.json=&etag=%22c79f2b6a0cea6f4b564fed1938984bace9d30ff0%22 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,415 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
-2026-09-30 20:03:00,471 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,522 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:03:00,538 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2F1110a243fdf4706b3f48f1d95db1a4f5529b4d41%2Fvocab.txt=&etag=%22fb140275c155a9c7c5a3b3e0e77a9e839594a938%22 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,554 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2F1110a243fdf4706b3f48f1d95db1a4f5529b4d41%2Fvocab.txt=&etag=%22fb140275c155a9c7c5a3b3e0e77a9e839594a938%22 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,613 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:03:00,630 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2F1110a243fdf4706b3f48f1d95db1a4f5529b4d41%2Ftokenizer.json=&etag=%22cb202bfe2e3c98645018a6d12f182a434c9d3e02%22 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,646 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2F1110a243fdf4706b3f48f1d95db1a4f5529b4d41%2Ftokenizer.json=&etag=%22cb202bfe2e3c98645018a6d12f182a434c9d3e02%22 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,705 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/added_tokens.json "HTTP/1.1 404 Not Found"
-2026-09-30 20:03:00,749 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/special_tokens_map.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:03:00,765 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/special_tokens_map.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2F1110a243fdf4706b3f48f1d95db1a4f5529b4d41%2Fspecial_tokens_map.json=&etag=%22e7b0375001f109a6b8873d756ad4f7bbb15fbaa5%22 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,780 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/special_tokens_map.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2F1110a243fdf4706b3f48f1d95db1a4f5529b4d41%2Fspecial_tokens_map.json=&etag=%22e7b0375001f109a6b8873d756ad4f7bbb15fbaa5%22 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,825 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/chat_template.jinja "HTTP/1.1 404 Not Found"
-2026-09-30 20:03:00,901 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-09-30 20:03:00,917 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2F1_Pooling%2Fconfig.json=&etag=%22d1514c3162bbe87b343f565fadc62e6c06f04f03%22 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,933 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json?%2Fsentence-transformers%2Fall-MiniLM-L6-v2%2Fresolve%2Fmain%2F1_Pooling%2Fconfig.json=&etag=%22d1514c3162bbe87b343f565fadc62e6c06f04f03%22 "HTTP/1.1 200 OK"
-2026-09-30 20:03:00,983 - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/2_Normalize/config.json "HTTP/1.1 404 Not Found"
-2026-09-30 20:03:01,028 - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
-2026-09-30 20:03:01,031 - INFO - Loading unified Gemma 4 12B model from ./models/gemma-4-12b-it-Q4_K_M.gguf...
-llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
-llama_kv_cache: the V embeddings have different sizes across layers and FA is not enabled - padding V cache to 2048
-llama_kv_cache: the V embeddings have different sizes across layers and FA is not enabled - padding V cache to 2048
-2026-09-30 20:03:09,454 - INFO - 
-Running chapter closure sweep relative to logical clock cutoff: 1788049274...
-2026-09-30 20:03:10,797 - INFO - Found 23 events to close (closure budget until 20:54:39).
-2026-09-30 20:03:10,797 - INFO - Closing Event ID 11504...
-2026-09-30 20:03:13,081 - INFO - [BATCH AUDIT] Event 11504: auditing articles 1-4 of 4 in one call...
-2026-09-30 20:05:05,545 - INFO - [BATCH AUDIT] Event 11504: chunk verdict — keep 4, evict 0.
-2026-09-30 20:05:12,410 - INFO - [SAGA CHECK] Event 11504: 1263 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 20:05:12,873 - INFO - [SAGA CHECK] Event 11504 vs closed Event 10460 (1/8, 5 shared keys)...
-2026-09-30 20:05:58,618 - INFO - [SAGA CHECK] Event 11504 vs closed Event 10590 (2/8, 5 shared keys)...
-2026-09-30 20:06:42,696 - INFO - [SAGA CHECK] Event 11504 vs closed Event 11116 (3/8, 5 shared keys)...
-2026-09-30 20:07:25,183 - INFO - [SAGA CHECK] Event 11504 vs closed Event 11103 (4/8, 5 shared keys)...
-2026-09-30 20:08:07,486 - INFO - [SAGA CHECK] Event 11504 vs closed Event 11233 (5/8, 5 shared keys)...
-2026-09-30 20:08:50,166 - INFO - [SAGA CHECK] Event 11504 vs closed Event 10611 (6/8, 5 shared keys)...
-2026-09-30 20:09:32,296 - INFO - [SAGA CHECK] Event 11504 vs closed Event 9773 (7/8, 5 shared keys)...
-2026-09-30 20:10:09,998 - INFO - [SAGA CHECK] Event 11504 vs closed Event 11192 (8/8, 5 shared keys)...
-2026-09-30 20:10:53,420 - INFO - Event ID 11504 closed successfully.
-2026-09-30 20:10:53,420 - INFO - Closing Event ID 11968...
-2026-09-30 20:10:56,221 - INFO - Event ID 11968 closed successfully.
-2026-09-30 20:10:56,221 - INFO - Closing Event ID 11969...
-2026-09-30 20:10:58,527 - INFO - Event ID 11969 closed successfully.
-2026-09-30 20:10:58,527 - INFO - Closing Event ID 11970...
-2026-09-30 20:11:00,789 - INFO - Event ID 11970 closed successfully.
-2026-09-30 20:11:00,789 - INFO - Closing Event ID 11971...
-2026-09-30 20:11:03,121 - INFO - Event ID 11971 closed successfully.
-2026-09-30 20:11:03,121 - INFO - Closing Event ID 11972...
-2026-09-30 20:11:05,380 - INFO - Event ID 11972 closed successfully.
-2026-09-30 20:11:05,380 - INFO - Closing Event ID 11973...
-2026-09-30 20:11:07,689 - INFO - Event ID 11973 closed successfully.
-2026-09-30 20:11:07,689 - INFO - Closing Event ID 11974...
-2026-09-30 20:11:09,963 - INFO - Event ID 11974 closed successfully.
-2026-09-30 20:11:09,963 - INFO - Closing Event ID 11520...
-2026-09-30 20:11:11,775 - INFO - [BATCH AUDIT] Event 11520: auditing articles 1-9 of 9 in one call...
-2026-09-30 20:13:28,960 - INFO - [EVICT DECISION] Event 11520: Evict Article 113895
-2026-09-30 20:13:28,960 - INFO - [EVICT DECISION] Event 11520: Evict Article 114954
-2026-09-30 20:13:28,960 - INFO - [BATCH AUDIT] Event 11520: chunk verdict — keep 7, evict 2.
-2026-09-30 20:13:34,840 - INFO - [SAGA CHECK] Event 11520: 1008 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 20:13:35,301 - INFO - [SAGA CHECK] Event 11520 vs closed Event 7224 (1/8, 7 shared keys)...
-2026-09-30 20:14:25,686 - INFO - [SAGA CHECK] Event 11520 vs closed Event 1165 (2/8, 7 shared keys)...
-2026-09-30 20:15:10,956 - INFO - [SAGA CHECK] Event 11520 vs closed Event 8836 (3/8, 6 shared keys)...
-2026-09-30 20:15:54,827 - INFO - [SAGA CHECK] Event 11520 vs closed Event 9244 (4/8, 6 shared keys)...
-2026-09-30 20:16:37,207 - INFO - [SAGA LINK MEMORY] Event 11520 and Event 9244 linked as SAME_SAGA.
-2026-09-30 20:16:38,228 - INFO - [SAGA CHECK] Event 11520 vs closed Event 8266 (5/8, 6 shared keys)...
-2026-09-30 20:17:22,383 - INFO - [SAGA CHECK] Event 11520 vs closed Event 7976 (6/8, 6 shared keys)...
-2026-09-30 20:18:08,767 - INFO - [SAGA CHECK] Event 11520 vs closed Event 7672 (7/8, 6 shared keys)...
-2026-09-30 20:18:55,108 - INFO - [SAGA CHECK] Event 11520 vs closed Event 5723 (8/8, 6 shared keys)...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.76it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.75it/s]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 58.14it/s]
-2026-09-30 20:21:38,110 - INFO -   [REFRAME] Event 11520 re-titled from 7 milestones: 'Protests over Minister B Nagendra's resignation in Karnataka'
-2026-09-30 20:21:38,371 - INFO - Event ID 11520 closed successfully.
-2026-09-30 20:21:38,372 - INFO - Closing Event ID 11976...
-2026-09-30 20:21:41,136 - INFO - Event ID 11976 closed successfully.
-2026-09-30 20:21:41,136 - INFO - Closing Event ID 11977...
-2026-09-30 20:21:43,453 - INFO - Event ID 11977 closed successfully.
-2026-09-30 20:21:43,453 - INFO - Closing Event ID 11574...
-2026-09-30 20:21:45,260 - INFO - [BATCH AUDIT] Event 11574: auditing articles 1-5 of 5 in one call...
-2026-09-30 20:23:08,334 - INFO - [BATCH AUDIT] Event 11574: chunk verdict — keep 5, evict 0.
-2026-09-30 20:23:15,102 - INFO - [SAGA CHECK] Event 11574: 1330 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 20:23:15,550 - INFO - [SAGA CHECK] Event 11574 vs closed Event 8940 (1/8, 8 shared keys)...
-2026-09-30 20:23:59,766 - INFO - [SAGA CHECK] Event 11574 vs closed Event 7224 (2/8, 8 shared keys)...
-2026-09-30 20:24:42,032 - INFO - [SAGA CHECK] Event 11574 vs closed Event 7694 (3/8, 8 shared keys)...
-2026-09-30 20:25:24,060 - INFO - [SAGA CHECK] Event 11574 vs closed Event 1953 (4/8, 8 shared keys)...
-2026-09-30 20:26:07,581 - INFO - [SAGA CHECK] Event 11574 vs closed Event 10340 (5/8, 7 shared keys)...
-2026-09-30 20:26:51,936 - INFO - [SAGA CHECK] Event 11574 vs closed Event 11116 (6/8, 7 shared keys)...
-2026-09-30 20:27:33,576 - INFO - [SAGA CHECK] Event 11574 vs closed Event 11221 (7/8, 7 shared keys)...
-2026-09-30 20:28:14,261 - INFO - [SAGA CHECK] Event 11574 vs closed Event 9595 (8/8, 7 shared keys)...
-2026-09-30 20:30:37,266 - INFO -   [REFRAME] Event 11574 re-titled from 5 milestones: 'Sonia Gandhi Memoir Publication Status'
-2026-09-30 20:30:37,510 - INFO - Event ID 11574 closed successfully.
-2026-09-30 20:30:37,510 - INFO - Closing Event ID 11978...
-2026-09-30 20:30:40,325 - INFO - Event ID 11978 closed successfully.
-2026-09-30 20:30:40,325 - INFO - Closing Event ID 11072...
-2026-09-30 20:30:42,184 - INFO - [BATCH AUDIT] Event 11072: auditing articles 1-8 of 8 in one call...
-2026-09-30 20:33:24,582 - INFO - [EVICT DECISION] Event 11072: Evict Article 105950
-2026-09-30 20:33:24,582 - INFO - [EVICT DECISION] Event 11072: Evict Article 108685
-2026-09-30 20:33:24,582 - INFO - [EVICT DECISION] Event 11072: Evict Article 109501
-2026-09-30 20:33:24,582 - INFO - [EVICT DECISION] Event 11072: Evict Article 109867
-2026-09-30 20:33:24,582 - INFO - [EVICT DECISION] Event 11072: Evict Article 114568
-2026-09-30 20:33:24,582 - INFO - [EVICT DECISION] Event 11072: Evict Article 115049
-2026-09-30 20:33:24,582 - INFO - [BATCH AUDIT] Event 11072: chunk verdict — keep 2, evict 6.
-2026-09-30 20:33:30,989 - INFO - [SAGA CHECK] Event 11072: 1446 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 20:33:31,437 - INFO - [SAGA CHECK] Event 11072 vs closed Event 10590 (1/8, 9 shared keys)...
-2026-09-30 20:34:19,751 - INFO - [SAGA CHECK] Event 11072 vs closed Event 10472 (2/8, 9 shared keys)...
-2026-09-30 20:35:00,814 - INFO - [SAGA LINK MEMORY] Event 11072 and Event 10472 linked as SAME_SAGA.
-2026-09-30 20:35:01,763 - INFO - [SAGA CHECK] Event 11072 vs closed Event 10657 (3/8, 9 shared keys)...
-2026-09-30 20:35:45,489 - INFO - [SAGA CHECK] Event 11072 vs closed Event 10242 (4/8, 9 shared keys)...
-2026-09-30 20:36:27,008 - INFO - [SAGA CHECK] Event 11072 vs closed Event 2437 (5/8, 9 shared keys)...
-2026-09-30 20:37:08,739 - INFO - [SAGA CHECK] Event 11072 vs closed Event 11784 (6/8, 8 shared keys)...
-2026-09-30 20:37:52,918 - INFO - [SAGA CHECK] Event 11072 vs closed Event 9066 (7/8, 8 shared keys)...
-2026-09-30 20:38:34,104 - INFO - [SAGA CHECK] Event 11072 vs closed Event 8894 (8/8, 8 shared keys)...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 44.21it/s]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 41.95it/s]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 60.95it/s]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 62.78it/s]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 51.20it/s]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 51.36it/s]
-2026-09-30 20:39:30,413 - INFO - Event ID 11072 closed successfully.
-2026-09-30 20:39:30,413 - INFO - Closing Event ID 11838...
-2026-09-30 20:39:32,227 - INFO - [BATCH AUDIT] Event 11838: auditing articles 1-3 of 3 in one call...
-2026-09-30 20:40:56,690 - INFO - [EVICT DECISION] Event 11838: Evict Article 115067
-2026-09-30 20:40:56,691 - INFO - [BATCH AUDIT] Event 11838: chunk verdict — keep 2, evict 1.
-2026-09-30 20:41:03,488 - INFO - [SAGA CHECK] Event 11838: 620 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 20:41:03,934 - INFO - [SAGA CHECK] Event 11838 vs closed Event 9595 (1/8, 6 shared keys)...
-2026-09-30 20:41:48,577 - INFO - [SAGA CHECK] Event 11838 vs closed Event 9529 (2/8, 6 shared keys)...
-2026-09-30 20:42:31,122 - INFO - [SAGA CHECK] Event 11838 vs closed Event 6101 (3/8, 6 shared keys)...
-2026-09-30 20:43:14,056 - INFO - [SAGA CHECK] Event 11838 vs closed Event 4874 (4/8, 6 shared keys)...
-2026-09-30 20:43:57,831 - INFO - [SAGA CHECK] Event 11838 vs closed Event 1032 (5/8, 6 shared keys)...
-2026-09-30 20:44:41,812 - INFO - [SAGA CHECK] Event 11838 vs closed Event 241 (6/8, 6 shared keys)...
-2026-09-30 20:45:25,516 - INFO - [SAGA CHECK] Event 11838 vs closed Event 11877 (7/8, 5 shared keys)...
-2026-09-30 20:46:08,404 - INFO - [SAGA CHECK] Event 11838 vs closed Event 11331 (8/8, 5 shared keys)...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 29.07it/s]
-2026-09-30 20:46:54,738 - INFO - Event ID 11838 closed successfully.
-2026-09-30 20:46:54,738 - INFO - Closing Event ID 11979...
-2026-09-30 20:46:57,005 - INFO - Event ID 11979 closed successfully.
-2026-09-30 20:46:57,005 - INFO - Closing Event ID 11981...
-2026-09-30 20:46:59,303 - INFO - Event ID 11981 closed successfully.
-2026-09-30 20:46:59,304 - INFO - Closing Event ID 11982...
-2026-09-30 20:47:01,562 - INFO - Event ID 11982 closed successfully.
-2026-09-30 20:47:01,562 - INFO - Closing Event ID 11544...
-2026-09-30 20:47:03,375 - INFO - [BATCH AUDIT] Event 11544: auditing articles 1-5 of 5 in one call...
-2026-09-30 20:48:39,598 - INFO - [EVICT DECISION] Event 11544: Evict Article 115155
-2026-09-30 20:48:39,598 - INFO - [BATCH AUDIT] Event 11544: chunk verdict — keep 4, evict 1.
-2026-09-30 20:48:45,939 - INFO - [SAGA CHECK] Event 11544: 1470 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 20:48:46,387 - INFO - [SAGA CHECK] Event 11544 vs closed Event 11072 (1/8, 9 shared keys)...
-2026-09-30 20:49:33,076 - INFO - [SAGA CHECK] Event 11544 vs closed Event 8312 (2/8, 9 shared keys)...
-2026-09-30 20:50:15,834 - INFO - [SAGA CHECK] Event 11544 vs closed Event 6652 (3/8, 9 shared keys)...
-2026-09-30 20:50:59,160 - INFO - [SAGA CHECK] Event 11544 vs closed Event 5477 (4/8, 9 shared keys)...
-2026-09-30 20:51:41,674 - INFO - [SAGA CHECK] Event 11544 vs closed Event 5635 (5/8, 9 shared keys)...
-2026-09-30 20:52:23,849 - INFO - [SAGA CHECK] Event 11544 vs closed Event 3960 (6/8, 9 shared keys)...
-2026-09-30 20:53:06,352 - INFO - [SAGA CHECK] Event 11544 vs closed Event 2926 (7/8, 9 shared keys)...
-2026-09-30 20:53:48,508 - INFO - [SAGA CHECK] Event 11544 vs closed Event 11784 (8/8, 8 shared keys)...
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 40.13it/s]
-2026-09-30 20:54:35,095 - INFO - Event ID 11544 closed successfully.
-2026-09-30 20:54:35,095 - INFO - Closing Event ID 11987...
-2026-09-30 20:54:37,400 - INFO - Event ID 11987 closed successfully.
-2026-09-30 20:54:37,400 - INFO - Closing Event ID 11988...
-2026-09-30 20:54:39,655 - INFO - Event ID 11988 closed successfully.
-2026-09-30 20:54:39,655 - INFO - Closure budget used — remaining closures resume on next run.
-2026-09-30 20:54:39,655 - INFO - 
-Checking for historical NULL milestones to backfill...
-2026-09-30 20:54:40,344 - INFO - Running NULL milestone sweep for 20 articles...
-2026-09-30 21:27:41,966 - INFO - Successfully backfilled 20 NULL milestones.
-2026-09-30 21:27:44,305 - INFO - Loaded 465 candidate events (0 recently-closed, reopenable).
-2026-09-30 21:27:44,306 - INFO - 
-Processing article ID 123897: 'DMK functionary, Sub-Registrar among six booked for alleged land fraud in Srirangam - The Hindu'
-2026-09-30 21:27:44,306 - INFO -   Entities: ['dmk']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 35.72it/s]
-2026-09-30 21:27:44,338 - INFO -   Best similarity match: 0.7628 with Event ID 12427
-2026-09-30 21:29:25,269 - INFO - Nomination: article_id=123897, event_id=12427, cosine=0.7628, vote=ATTACH | Raw: The article describes the investigation and registration of a case against M Ramkumar and others for the specific fraud of registering temple land using forged documents. This directly matches the core occurrence described in the event's scope (the fraud charges and subsequent police action). It is a direct development of the same specific land scam case.
-
-ANSWER: ATTACH
-2026-09-30 21:29:25,270 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-30 21:30:50,472 - INFO -   Generated Milestone (Attempt 1): 'The Tiruchi City Crime Branch registered a case against a DMK functionary, a Sub-Registrar, and four others for alleged land fraud involving forged documents in Srirangam.'
-2026-09-30 21:31:16,697 - INFO -   Generated Event Title: 'DMK functionary and others arrested for land fraud' | slug: dmk-functionary-and-others-arrested-for-land-fraud
-2026-09-30 21:31:23,694 - INFO - [SAGA CHECK] Event 12427: 196 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 21:31:24,163 - INFO - [SAGA CHECK] Event 12427 vs closed Event 9101 (1/8, 4 shared keys)...
-2026-09-30 21:32:12,328 - INFO - [SAGA CHECK] Event 12427 vs closed Event 5750 (2/8, 4 shared keys)...
-2026-09-30 21:32:56,924 - INFO - [SAGA CHECK] Event 12427 vs closed Event 4636 (3/8, 4 shared keys)...
-2026-09-30 21:33:40,714 - INFO - [SAGA CHECK] Event 12427 vs closed Event 2844 (4/8, 4 shared keys)...
-2026-09-30 21:34:24,970 - INFO - [SAGA CHECK] Event 12427 vs closed Event 2021 (5/8, 4 shared keys)...
-2026-09-30 21:35:08,128 - INFO - [SAGA CHECK] Event 12427 vs closed Event 11379 (6/8, 3 shared keys)...
-2026-09-30 21:35:53,681 - INFO - [SAGA CHECK] Event 12427 vs closed Event 10872 (7/8, 3 shared keys)...
-2026-09-30 21:36:37,698 - INFO - [SAGA CHECK] Event 12427 vs closed Event 9383 (8/8, 3 shared keys)...
-2026-09-30 21:37:22,336 - INFO -   Attached to Event ID 12427 successfully.
-2026-09-30 21:37:22,337 - INFO - 
-Processing article ID 123904: 'Five accused in Armstrong murder case granted bail - The Hindu'
-2026-09-30 21:37:22,337 - INFO -   Entities: ['chennai', 'bahujan_samaj_party']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 73.89it/s]
-2026-09-30 21:37:22,352 - INFO -   Best similarity match: 0.4037 with Event ID 12375
-2026-09-30 21:38:20,196 - INFO -   Generated Event Scope: 'This event covers the granting of mandatory bail to five individuals accused in the murder of K. Armstrong in Chennai, including its reactions, analyses, and follow-up developments. It excludes other actions by the accused individuals, the CBI, or the Bahujan Samaj Party that are not direct developments of this specific bail ruling.'
-2026-09-30 21:38:22,708 - INFO -   Created new invisible Event ID 12451.
-2026-09-30 21:38:22,708 - INFO - 
-Processing article ID 123907: 'PWD Minister tried to join AIADMK before TVK: Edappadi K. Palaniswami - The Hindu'
-2026-09-30 21:38:22,708 - INFO -   Entities: ['aiadmk', 'tamil_nadu', 'dmk']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 56.72it/s]
-2026-09-30 21:38:22,728 - INFO -   Best similarity match: 0.6439 with Event ID 12240
-2026-09-30 21:40:13,129 - INFO - Nomination: article_id=123907, event_id=12240, cosine=0.6439, vote=REJECT | Raw: The article discusses a political rivalry and allegations regarding a minister's move between AIADMK and TVK. While it involves the same political parties, it does not relate to the specific announcement of Maragatham Kumaravel and P. Sathyabama as candidates for the Madurantakam and Dharapuram byelections. It is a separate political controversy regarding a different individual (Aadhav Arjuna) and does not constitute a reaction or consequence of the specific byelection announcement.
-
-ANSWER: REJECT
-2026-09-30 21:40:13,129 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-30 21:41:16,924 - INFO -   Generated Event Scope: 'This event covers Edappadi K. Palaniswami's public allegation in Salem that PWD Minister Aadhav Arjuna attempted to join the AIADMK before joining TVK, including its reactions, analyses, and follow-up developments. It excludes other actions by Edappadi K. Palaniswami, Aadhav Arjuna, the AIADMK, or the TVK unless they are developments of this specific occurrence.'
-2026-09-30 21:41:19,411 - INFO -   Created new invisible Event ID 12452.
-2026-09-30 21:41:19,412 - INFO - 
-Processing article ID 123925: 'Govt jobs to one lakh youth in Uttar Pradesh, says Adityanath - The Hindu'
-2026-09-30 21:41:19,412 - INFO -   Entities: ['pm_modi', 'sp', 'bjp', 'yogi_adityanath', 'uttar_pradesh', 'narendra_modi', 'samajwadi_party', 'delhi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 64.81it/s]
-2026-09-30 21:41:19,430 - INFO -   Best similarity match: 0.6356 with Event ID 12423
-2026-09-30 21:43:03,978 - INFO - Nomination: article_id=123925, event_id=12423, cosine=0.6356, vote=REJECT | Raw: The article describes "Mission Rojgar" launched by Yogi Adityanath in Uttar Pradesh. While it shares a similar theme (job distribution), it is a distinct, separate government initiative and occurrence from the specific "Rozgar Mela" inaugurated by Union Minister V. Somanna. The two events are independent occurrences involving different leaders and specific administrative actions. Therefore, it does not fall within the scope of the Somanna-led event.
-
-ANSWER: REJECT
-2026-09-30 21:43:03,978 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-30 21:43:58,866 - INFO -   Generated Event Scope: 'This event covers Yogi Adityanath's launch of 'Mission Rojgar' at Lok Bhawan auditorium to appoint one lakh youths in Uttar Pradesh, including its reactions, analyses, and follow-up developments. It excludes other actions by the Uttar Pradesh government, the Chief Minister, or other regional entities unless they are direct developments of this specific initiative.'
-2026-09-30 21:44:01,164 - INFO -   Created new invisible Event ID 12453.
-2026-09-30 21:44:01,165 - INFO - 
-Processing article ID 123926: 'Himanta Sarma Jabs Mamata Banerjee Over New Trinamool Symbol For Bypolls: Football Will Deflate'
-2026-09-30 21:44:01,165 - INFO -   Entities: ['trinamool', 'bjp', 'assam', 'mamata_banerjee', 'congress', 'rahul_gandhi', 'west_bengal']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 45.89it/s]
-2026-09-30 21:44:01,189 - INFO -   Best similarity match: 0.6792 with Event ID 12159
-2026-09-30 21:46:02,063 - INFO - Nomination: article_id=123926, event_id=12159, cosine=0.6792, vote=ATTACH | Raw: The article describes a direct reaction to the Election Commission's decision regarding the Trinamool Congress's name and symbol for the specific by-polls mentioned in the scope. It includes Himanta Sarma's criticism of the new "football player" symbol and the political fallout surrounding the upcoming October 6 by-elections. Since it covers a reaction and political fallout directly connected to the by-poll announcement and scheduling, it falls within the scope.
-
-ANSWER: ATTACH
-2026-09-30 21:46:02,063 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-30 21:47:32,774 - INFO -   Generated Milestone (Attempt 1): 'Assam Chief Minister Himanta Biswa Sarma criticized Mamata Banerjee after the Election Commission allotted a new football player symbol to her faction for the upcoming October 6 bypolls.'
-2026-09-30 21:47:35,270 - INFO -   Attached to Event ID 12159 successfully.
-2026-09-30 21:47:35,270 - INFO - 
-Processing article ID 123940: 'Assam Seeks West Bengal's Support To Revamp Historic Madhupur Satra In Cooch Behar'
-2026-09-30 21:47:35,270 - INFO -   Entities: ['bjp', 'west_bengal', 'assam']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 59.14it/s]
-2026-09-30 21:47:35,290 - INFO -   Best similarity match: 0.5553 with Event ID 12256
-2026-09-30 21:48:48,521 - INFO -   Generated Event Scope: 'This event covers Assam Chief Minister Himanta Biswa Sarma's visit to West Bengal's Cooch Behar district to discuss the redevelopment of the Madhupur Satra with West Bengal Sports Minister Nisith Pramanik, including its reactions, analyses, and follow-up developments. It excludes other actions by the Assam or West Bengal governments, the individuals involved, or the regions mentioned unless they are direct developments of this specific redevelopment project.'
-2026-09-30 21:48:50,898 - INFO -   Created new invisible Event ID 12454.
-2026-09-30 21:48:50,898 - INFO - 
-Processing article ID 123948: 'Bengal police arrest Rejinagar bypoll candidate days after Nandigram candidate Milan Pradhan’s arrest - The Hindu'
-2026-09-30 21:48:50,898 - INFO -   Entities: ['west_bengal', 'congress']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 53.87it/s]
-2026-09-30 21:48:50,919 - INFO -   Best similarity match: 0.6803 with Event ID 12425
-2026-09-30 21:50:31,988 - INFO - Nomination: article_id=123948, event_id=12425, cosine=0.6803, vote=REJECT | Raw: The article describes the arrest of Saiful Islam, an Independent candidate for the Rejinagar bypoll. While this occurs in the same general timeframe and region as the Nandigram bypoll, it is a separate legal occurrence involving a different candidate and a different constituency. It is not a reaction, consequence, or follow-up to the specific arrest of Milan Pradhan.
-
-ANSWER: REJECT
-2026-09-30 21:50:31,988 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-30 21:51:32,089 - INFO -   Generated Event Scope: 'This event covers the arrest of Rejinagar bypoll candidate Saiful Islam and the related legal actions against AJUP leaders in West Bengal, including reactions, analyses, and follow-up developments. It excludes other actions by the Aam Janata Unnayan Party, the police, or the candidates unless they are direct developments of this specific occurrence.'
-2026-09-30 21:51:34,549 - INFO -   Created new invisible Event ID 12455.
-2026-09-30 21:51:34,549 - INFO - 
-Processing article ID 123959: 'Hyderabad Boy, 3, Dies After Being Hit By Car While Trying To Cross Road'
-2026-09-30 21:51:34,549 - INFO -   Entities: ['owaisi', 'hyderabad']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 62.55it/s]
-2026-09-30 21:51:34,568 - INFO -   Best similarity match: 0.4340 with Event ID 12388
-2026-09-30 21:52:27,226 - INFO -   Generated Event Scope: 'This event covers the death of three-year-old Izan Uddin after being hit by a fleeing car in Hyderabad, including its reactions, analyses, and follow-up developments. It excludes other actions by the family, the police, or the local government unless they are direct developments of this occurrence.'
-2026-09-30 21:52:29,557 - INFO -   Created new invisible Event ID 12456.
-2026-09-30 21:52:29,557 - INFO - 
-Processing article ID 124030: 'Delhi SIR LK Advani And Manish Sisodia Among Those Issued Notices Over Voter Details'
-2026-09-30 21:52:29,557 - INFO -   Entities: ['arvind_kejriwal', 'aap', 'delhi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 61.40it/s]
-2026-09-30 21:52:29,576 - INFO -   Best similarity match: 0.6250 with Event ID 12190
-2026-09-30 21:54:18,135 - INFO - Nomination: article_id=124030, event_id=12190, cosine=0.6250, vote=REJECT | Raw: The article describes a broad "Special Intensive Revision" (SIR) of Delhi's electoral rolls affecting millions of voters, including high-profile figures like L K Advani and Manish Sisodia. While Raghav Chadha's inclusion is a specific instance within this larger administrative process, the article is about the general revision and the mass issuance of notices for discrepancies, not a specific development, reaction, or consequence regarding Raghav Chadha's specific addition to the list.
-
-ANSWER: REJECT
-2026-09-30 21:54:18,135 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-30 21:55:17,768 - INFO -   Generated Event Scope: 'This event covers the issuance of notices to prominent Delhi voters, including L K Advani and Manish Sisodia, regarding discrepancies in their electoral details during the Special Intensive Revision, including its reactions, analyses, and follow-up developments. It excludes other actions by these individuals, political parties, or the Delhi region that are not direct developments of this specific voter list revision process.'
-2026-09-30 21:55:20,055 - INFO -   Created new invisible Event ID 12457.
-2026-09-30 21:55:20,055 - INFO - 
-Processing article ID 124034: 'Bhagwant Mann Takes AAP's Punjab Report Card Door-To-Door Ahead Of Elections'
-2026-09-30 21:55:20,055 - INFO -   Entities: ['aap', 'bjp', 'punjab', 'gujarat', 'congress', 'akali_dal']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 62.65it/s]
-2026-09-30 21:55:20,074 - INFO -   Best similarity match: 0.6568 with Event ID 9977
-2026-09-30 21:57:12,448 - INFO - Nomination: article_id=124034, event_id=9977, cosine=0.6568, vote=REJECT | Raw: The article describes a door-to-door campaign by Chief Minister Bhagwant Mann and the AAP ahead of the 2027 elections. This is a separate political campaign and a routine electoral activity. It is not a reaction, analysis, or consequence of Prime Minister Modi's specific visit to flag off railway projects in July 2026. The two occurrences are unrelated despite sharing the same geographic region and political context.
-
-ANSWER: REJECT
-2026-09-30 21:57:12,448 - INFO -   [REJECT] Rejected by scope gate.
-2026-09-30 21:58:11,061 - INFO -   Generated Event Scope: 'This event covers Bhagwant Mann's launch of the Aam Aadmi Party's door-to-door campaign in Dhuri, Punjab, including its reactions, analyses, and follow-up developments. It excludes other actions by Bhagwant Mann, the Aam Aadmi Party, or the Punjab region unless they are direct developments of this specific campaign.'
-2026-09-30 21:58:13,395 - INFO -   Created new invisible Event ID 12458.
-2026-09-30 21:58:13,395 - INFO - 
-Processing article ID 124053: 'Alberta independence explained: Why Canada's oil province wants out and where Trump fits in - The Times of India'
-2026-09-30 21:58:13,395 - INFO -   Entities: ['narendra_modi']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 76.91it/s]
-2026-09-30 21:58:13,411 - INFO -   Best similarity match: 0.2709 with Event ID 12299
-2026-09-30 21:59:08,120 - INFO -   Generated Event Scope: 'This event covers the October 19 vote in Alberta on whether the government should initiate a legal process for a binding referendum on separation from Canada, including its reactions, analyses, and follow-up developments. It excludes other actions by the Alberta government, the Canadian federal government, or the oil industry unless they are direct developments of this specific referendum process.'
-2026-09-30 21:59:10,479 - INFO -   Created new invisible Event ID 12459.
-2026-09-30 21:59:10,479 - INFO - 
-Processing article ID 124091: 'Afghan man arrested over suspected synagogue arson attempt in Germany ahead of holiest Jewish day - The Times of India'
-2026-09-30 21:59:10,479 - INFO -   Entities: ['congress']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 56.25it/s]
-2026-09-30 21:59:10,500 - INFO -   Best similarity match: 0.4497 with Event ID 12096
-2026-09-30 22:00:09,457 - INFO -   Generated Event Scope: 'This event covers the arrest of a 37-year-old Afghan man in Germany for an attempted arson attack on the Bergische Synagogue in Wuppertal, including the subsequent condemnations by local officials and community leaders. It excludes other actions by the suspect, the local government, or the Jewish community unless they are direct developments of this specific arson attempt.'
-2026-09-30 22:00:11,778 - INFO -   Created new invisible Event ID 12460.
-2026-09-30 22:00:11,778 - INFO - 
-Processing article ID 124124: 'Akal Takht Expels Akali Dal Leader Amarjit Singh Chawla From 'Khalsa Panth''
-2026-09-30 22:00:11,778 - INFO -   Entities: ['sad', 'akali_dal']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 49.44it/s]
-2026-09-30 22:00:11,800 - INFO -   Best similarity match: 0.7169 with Event ID 12439
-2026-09-30 22:01:58,286 - INFO - Nomination: article_id=124124, event_id=12439, cosine=0.7169, vote=ATTACH | Raw: The article describes the expulsion of Amarjit Singh Chawla from the 'Khalsa Panth' by Akal Takht Sahib. This action is a direct consequence and official reaction to the rape charges filed against him, which is the core subject of the event's scope. Since it covers the fallout and disciplinary actions resulting from the specific rape case, it falls within the scope.
-
-ANSWER: ATTACH
-2026-09-30 22:01:58,286 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-30 22:03:31,069 - INFO -   Generated Milestone (Attempt 1): 'Sri Akal Takht Sahib expelled Shiromani Akali Dal leader Amarjit Singh Chawla and granthi Malkit Singh from the Khalsa Panth following rape charges and inappropriate messages.'
-2026-09-30 22:03:59,246 - INFO -   Generated Event Title: 'Amarjit Singh Chawla Rape Allegations and Expulsion' | slug: amarjit-singh-chawla-rape-allegations-and-expulsion
-2026-09-30 22:04:05,976 - INFO - [SAGA CHECK] Event 12439: 44 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 22:04:06,431 - INFO - [SAGA CHECK] Event 12439 vs closed Event 11346 (1/8, 3 shared keys)...
-2026-09-30 22:04:56,605 - INFO - [SAGA CHECK] Event 12439 vs closed Event 11103 (2/8, 3 shared keys)...
-2026-09-30 22:05:41,232 - INFO - [SAGA CHECK] Event 12439 vs closed Event 11331 (3/8, 3 shared keys)...
-2026-09-30 22:06:26,934 - INFO - [SAGA CHECK] Event 12439 vs closed Event 11073 (4/8, 3 shared keys)...
-2026-09-30 22:07:12,359 - INFO - [SAGA CHECK] Event 12439 vs closed Event 10610 (5/8, 3 shared keys)...
-2026-09-30 22:07:56,168 - INFO - [SAGA CHECK] Event 12439 vs closed Event 9783 (6/8, 3 shared keys)...
-2026-09-30 22:08:42,004 - INFO - [SAGA CHECK] Event 12439 vs closed Event 9795 (7/8, 3 shared keys)...
-2026-09-30 22:09:26,855 - INFO - [SAGA CHECK] Event 12439 vs closed Event 9780 (8/8, 3 shared keys)...
-2026-09-30 22:10:15,379 - INFO -   Attached to Event ID 12439 successfully.
-2026-09-30 22:10:15,380 - INFO - 
-Processing article ID 124126: 'Poll Body Chief, S Jaishankar Among Those Facing Notices Over Voter List'
-2026-09-30 22:10:15,380 - INFO -   Entities: ['cpm', 'bjp', 's_jaishankar', 'delhi', 'arvind_kejriwal']
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 70.13it/s]
-2026-09-30 22:10:15,396 - INFO -   Best similarity match: 0.7454 with Event ID 12457
-2026-09-30 22:12:04,374 - INFO - Nomination: article_id=124126, event_id=12457, cosine=0.7454, vote=ATTACH | Raw: The article describes the issuance of notices to prominent voters (including S Jaishankar and Rekha Gupta) due to documentation discrepancies during the Special Intensive Revision (SIR) of electoral rolls. This is a direct development and clarification regarding the specific voter list revision process described in the event's scope. It covers the same occurrence (the SIR notice issuance) and provides follow-up details on the purpose and timeline of the verification process.
-
-ANSWER: ATTACH
-2026-09-30 22:12:04,374 - INFO -   [ATTACH] Approved by scope gate.
-2026-09-30 22:13:24,402 - INFO -   Generated Milestone (Attempt 1): 'The Election Commission issued notices to prominent voters, including S Jaishankar and Rekha Gupta, to resolve documentation discrepancies during the Special Intensive Revision of electoral rolls.'
-2026-09-30 22:13:46,055 - INFO -   Generated Event Title: 'Election Commission Electoral Roll Revision Notices' | slug: election-commission-electoral-roll-revision-notices
-2026-09-30 22:13:53,347 - INFO - [SAGA CHECK] Event 12457: 530 candidates share >=2 keys; capped to 8 strongest.
-2026-09-30 22:13:53,348 - INFO - [SAGA CHECK] Event 12457: deadline reached after 0/8 calls — returning partial links.
-2026-09-30 22:13:55,766 - INFO -   Attached to Event ID 12457 successfully.
-2026-09-30 22:13:55,766 - INFO - Deadline reached — stopping batch early (per-article checkpoints already committed).
-2026-09-30 22:13:56,214 - INFO - Batch completed. attached=14, has_more=true
-has_more=true
-articles_attached=14
-	Command being timed: "python timeline_pipeline.py --deadline-ts 1790806358 --batch-size 200"
-	User time (seconds): 26412.45
-	System time (seconds): 9.19
-	Percent of CPU this job got: 335%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:11:21
-	Average shared text size (kbytes): 0
-	Average unshared data size (kbytes): 0
-	Average stack size (kbytes): 0
-	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 14392528
-	Average resident set size (kbytes): 0
-	Major (requiring I/O) page faults: 25087
-	Minor (reclaiming a frame) page faults: 544711
-	Voluntary context switches: 230514
-	Involuntary context switches: 3529639
-	Swaps: 0
-	File system inputs: 1791992
-	File system outputs: 180600
-	Socket messages sent: 0
-	Socket messages received: 0
-	Signals delivered: 0
-	Page size (bytes): 4096
-	Exit status: 0
-               total        used        free      shared  buff/cache   available
-Mem:           15988        1392        7032          42        8182       14596
-Swap:           3071          90        2981
-pipeline_exit=0
