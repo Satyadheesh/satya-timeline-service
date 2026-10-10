@@ -1,0 +1,221 @@
+name: Satya Timeline Pipeline
+
+on:
+  # Forward loop cadence: daily at 13:30 UTC = 19:00 IST. Each run processes
+  # everything new since the checkpoint — chaining 95-min chunks via
+  # self-redispatch until caught up — then rests until the next evening.
+  # (~90 eligible articles/day ≈ 2-3 chunks per run.)
+  schedule:
+    - cron: '30 13 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry-run only — no DB writes, no LLM calls'
+        required: false
+        type: boolean
+        default: false
+      reset_events:
+        description: 'DANGER: wipe all events + checkpoint and replay EVERY article from ID 0 (full coverage rebuild)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: satya-pipeline-main
+  cancel-in-progress: false
+
+env:
+  CORE_TOKEN: ${{ secrets.CORE_TOKEN }}
+  PYTHONPATH: ${{ github.workspace }}/.ci
+
+jobs:
+  process_timeline:
+    runs-on: ubuntu-latest
+    # Small-chunk mode: the pipeline gets a 130-min soft deadline (stops cleanly
+    # between articles); 170 hard timeout covers model download + buffer.
+    timeout-minutes: 170
+    permissions:
+      contents: write
+      actions: write
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}-core
+          token: ${{ secrets.CORE_TOKEN }}
+          ref: main
+
+      - name: Free disk space (models need ~13GB)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force 2>/dev/null || true
+          df -h /
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install huggingface_hub libsql
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      # --- CACHE GEOMODELS ---
+      - name: Cache LLM Models
+        id: cache-models
+        uses: actions/cache@v4
+        with:
+          path: ./models
+          key: gemma4-12b-it-v1
+
+      - name: Download LLM Models
+        if: steps.cache-models.outputs.cache-hit != 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          mkdir -p models
+          python -c '
+          import os, shutil
+          from huggingface_hub import hf_hub_download
+
+          temp_cache = "./models/.hf_cache"
+          os.makedirs(temp_cache, exist_ok=True)
+
+          # Gemma 4 12B (Unified model for gate, scope, milestones, titles, saga, closure)
+          model_file = "./models/gemma-4-12b-it-Q4_K_M.gguf"
+          if not os.path.exists(model_file):
+              print("Downloading Gemma 4 12B...")
+              hf_hub_download(
+                  repo_id="unsloth/gemma-4-12b-it-GGUF",
+                  filename="gemma-4-12b-it-Q4_K_M.gguf",
+                  local_dir="./models",
+                  local_dir_use_symlinks=False,
+                  cache_dir=temp_cache
+              )
+              if os.path.exists(temp_cache):
+                  shutil.rmtree(temp_cache)
+          '
+
+      - name: Run Timeline Pipeline
+        id: run-pipeline
+        env:
+          SATYA_DB_URL: ${{ secrets.SATYA_DB_URL }}
+          SATYA_DB_TOKEN: ${{ secrets.SATYA_DB_TOKEN }}
+          MODEL_PATH: "./models/gemma-4-12b-it-Q4_K_M.gguf"
+          MODEL_GATE_PATH: "./models/gemma-4-12b-it-Q4_K_M.gguf"
+          MODEL_2B_PATH: "./models/gemma-4-12b-it-Q4_K_M.gguf"
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          if [ "${{ github.event.inputs.reset_events }}" = "true" ]; then
+            ARGS="$ARGS --reset-events"
+          fi
+
+          # Soft deadline: stop cleanly 130 min from now; big batch so the
+          # deadline (not the batch size) is what ends the chunk.
+          DEADLINE=$(( $(date +%s) + 130*60 ))
+          ARGS="$ARGS --deadline-ts $DEADLINE --batch-size 200"
+
+          # Execute pipeline and capture outputs. stderr too (that's where logging goes),
+          # the real exit code (plain `| tee` hid every crash as a green run), and peak RSS.
+          set +e
+          /usr/bin/time -v python timeline_pipeline.py $ARGS 2>&1 | tee pipeline.log
+          CODE=${PIPESTATUS[0]}
+          set -e
+          echo "::group::runner memory / OOM check"
+          free -m | tee -a pipeline.log
+          grep -E "Maximum resident|Exit status|Elapsed" pipeline.log | tail -3 || true
+          sudo dmesg 2>/dev/null | grep -iE "killed process|out of memory|oom" | tail -5 | tee -a pipeline.log || true
+          echo "::endgroup::"
+          echo "pipeline_exit=$CODE" | tee -a pipeline.log
+
+          # Extract variables and write to $GITHUB_OUTPUT
+          # anchored + last match only: the log now also contains logging lines like
+          # "Batch completed. attached=17, has_more=true", which broke $GITHUB_OUTPUT
+          HAS_MORE=$(grep -E '^has_more=(true|false)$' pipeline.log | tail -1 | cut -d= -f2)
+          ART_ATTACHED=$(grep -E '^articles_attached=[0-9]+$' pipeline.log | tail -1 | cut -d= -f2)
+          HAS_MORE=${HAS_MORE:-false}; ART_ATTACHED=${ART_ATTACHED:-0}
+
+          echo "has_more=$HAS_MORE" >> $GITHUB_OUTPUT
+          echo "articles_attached=$ART_ATTACHED" >> $GITHUB_OUTPUT
+
+          echo "GHA OUTPUT - has_more: $HAS_MORE, articles_attached: $ART_ATTACHED"
+          if [ "$CODE" != "0" ]; then
+            echo "::error::timeline_pipeline.py exited with $CODE — see the log on the run-logs branch"
+            exit "$CODE"
+          fi
+
+      - name: Backlog status
+        if: ${{ always() }}
+        run: |
+          # Written by the pipeline at the start and end of the run: what is waiting, how far
+          # behind, and this run's pace. Shown on the run's summary page.
+          if [ -f status.md ]; then cat status.md >> "$GITHUB_STEP_SUMMARY"; cat status.md; fi
+
+      # Keep the full log readable without GitHub log downloads (run-logs branch).
+      - name: Publish run log
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN: ${{ github.run_id }}
+        run: |
+          [ -f pipeline.log ] || exit 0
+          rm -rf /tmp/wt && mkdir /tmp/wt && cp pipeline.log /tmp/pipeline.log && cd /tmp/wt && git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${CORE_TOKEN}@github.com/${GITHUB_REPOSITORY}-core.git"
+          if git fetch -q --depth 1 origin run-logs; then git checkout -q -b run-logs FETCH_HEAD; else git checkout -q --orphan run-logs; fi
+          mkdir -p runs && tail -c 900000 /tmp/pipeline.log > "runs/$RUN.log" && cp "runs/$RUN.log" latest.log
+          ls -1t runs | tail -n +31 | sed 's#^#runs/#' | xargs -r git rm -q   # keep last 30
+          git add -A && git commit -qm "run $RUN log" && git push -q origin HEAD:run-logs
+
+      - name: Trigger next Timeline run if remaining
+        if: steps.run-pipeline.outputs.has_more == 'true' && github.event.inputs.dry_run != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "More articles remain. Triggering next Timeline Pipeline run..."
+          curl -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/timeline_pipeline.yml/dispatches \
+            -d '{"ref":"main"}'
+
+      # Failure Alert: Creates a GitHub Issue if the run crashes
+      - name: Report Pipeline Failure
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Timeline Pipeline Failure — Run #${{ github.run_number }}" \
+            --body "The timeline pipeline run failed. Please review the action run logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Native Keepalive
+        run: |
+          LAST_COMMIT=$(git log -1 --format=%ct)
+          NOW=$(date +%s)
+          DIFF=$(( (NOW - LAST_COMMIT) / 86400 ))
+          if [ "$DIFF" -gt 40 ]; then
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "chore: keepalive to prevent workflow suspension"
+            git push
+          else
+            echo "Last commit was $DIFF days ago. No keepalive needed."
+          fi
