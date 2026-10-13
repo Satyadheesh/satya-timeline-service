@@ -6,7 +6,7 @@ on:
   # self-redispatch until caught up — then rests until the next evening.
   # (~90 eligible articles/day ≈ 2-3 chunks per run.)
   schedule:
-    - cron: '30 13 * * *'
+    - cron: '30 10 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
