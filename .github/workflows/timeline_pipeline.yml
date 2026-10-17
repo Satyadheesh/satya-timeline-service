@@ -19,6 +19,16 @@ on:
         required: false
         type: boolean
         default: false
+      merge_only:
+        description: 'Skip the pipeline; only run the timeline clean-up (merge split stories, mark repeated updates)'
+        required: false
+        type: choice
+        options: ['no', 'dry-run', 'apply']
+        default: 'no'
+      watch:
+        description: 'Clean-up only: comma-separated event ids whose pair scores are always printed'
+        required: false
+        default: ''
 
 concurrency:
   group: satya-pipeline-main
@@ -30,7 +40,10 @@ env:
 
 jobs:
   process_timeline:
+    if: ${{ github.event.inputs.merge_only != 'dry-run' && github.event.inputs.merge_only != 'apply' }}
     runs-on: ubuntu-latest
+    outputs:
+      has_more: ${{ steps.run-pipeline.outputs.has_more }}
     # Small-chunk mode: the pipeline gets a 130-min soft deadline (stops cleanly
     # between articles); 170 hard timeout covers model download + buffer.
     timeout-minutes: 170
@@ -198,6 +211,91 @@ jobs:
             --title "Timeline Pipeline Failure — Run #${{ github.run_number }}" \
             --body "The timeline pipeline run failed. Please review the action run logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
+
+  # Nightly clean-up, after the last chunk of the day (caught up, has_more=false). Same workflow run, so it never
+  # runs alongside the pipeline (concurrency group above) and never races its writes. See timeline_merge.py.
+  merge_timelines:
+    needs: process_timeline
+    if: >-
+      ${{ always() && github.event.inputs.dry_run != 'true' && (
+        github.event.inputs.merge_only == 'dry-run' || github.event.inputs.merge_only == 'apply' ||
+        (needs.process_timeline.result == 'success' && needs.process_timeline.outputs.has_more == 'false')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 130
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}-core
+          token: ${{ secrets.CORE_TOKEN }}
+          ref: main
+
+      - name: Free disk space (models need ~13GB)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force 2>/dev/null || true
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install huggingface_hub libsql
+          pip install -r requirements.txt
+
+      - name: Cache LLM Models
+        id: cache-models
+        uses: actions/cache@v4
+        with:
+          path: ./models
+          key: gemma4-12b-it-v1
+
+      - name: Download LLM Models
+        if: steps.cache-models.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p models
+          python -c '
+          from huggingface_hub import hf_hub_download
+          hf_hub_download(repo_id="unsloth/gemma-4-12b-it-GGUF", filename="gemma-4-12b-it-Q4_K_M.gguf", local_dir="./models")
+          '
+
+      - name: Merge split timelines, mark repeated updates
+        env:
+          SATYA_DB_URL: ${{ secrets.SATYA_DB_URL }}
+          SATYA_DB_TOKEN: ${{ secrets.SATYA_DB_TOKEN }}
+          MODEL_PATH: "./models/gemma-4-12b-it-Q4_K_M.gguf"
+          WATCH: ${{ github.event.inputs.watch }}
+          MODE: ${{ github.event.inputs.merge_only }}
+        run: |
+          ARGS="--deadline-ts $(( $(date +%s) + 105*60 ))"
+          [ -n "$WATCH" ] && ARGS="$ARGS --watch $WATCH"
+          [ "$MODE" = "dry-run" ] && ARGS="$ARGS --dry-run"
+          set -o pipefail
+          python timeline_merge.py $ARGS 2>&1 | tee merge.log
+
+      - name: Summary and log (run-logs branch, merge/)
+        if: ${{ always() }}
+        env:
+          RUN: ${{ github.run_id }}
+        run: |
+          [ -f merge_status.md ] && cat merge_status.md >> "$GITHUB_STEP_SUMMARY"
+          [ -f merge.log ] || exit 0
+          cp merge.log /tmp/merge.log; [ -f merge_status.md ] && cp merge_status.md /tmp/merge_status.md
+          rm -rf /tmp/wt && mkdir /tmp/wt && cd /tmp/wt && git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${CORE_TOKEN}@github.com/${GITHUB_REPOSITORY}-core.git"
+          if git fetch -q --depth 1 origin run-logs; then git checkout -q -b run-logs FETCH_HEAD; else git checkout -q --orphan run-logs; fi
+          mkdir -p merge && tail -c 900000 /tmp/merge.log > "merge/$RUN.log"
+          [ -f /tmp/merge_status.md ] && cp /tmp/merge_status.md merge/latest.md
+          ls -1t merge/*.log | tail -n +31 | xargs -r git rm -q
+          git add -A && git commit -qm "merge run $RUN" && git push -q origin HEAD:run-logs
 
   keepalive:
     runs-on: ubuntu-latest
