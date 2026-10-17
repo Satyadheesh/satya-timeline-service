@@ -23,7 +23,7 @@ on:
         description: 'Skip the pipeline; only run the timeline clean-up (merge split stories, mark repeated updates)'
         required: false
         type: choice
-        options: ['no', 'dry-run', 'apply']
+        options: ['no', 'scores', 'dry-run', 'apply']
         default: 'no'
       watch:
         description: 'Clean-up only: comma-separated event ids whose pair scores are always printed'
@@ -40,7 +40,7 @@ env:
 
 jobs:
   process_timeline:
-    if: ${{ github.event.inputs.merge_only != 'dry-run' && github.event.inputs.merge_only != 'apply' }}
+    if: ${{ github.event.inputs.merge_only != 'scores' && github.event.inputs.merge_only != 'dry-run' && github.event.inputs.merge_only != 'apply' }}
     runs-on: ubuntu-latest
     outputs:
       has_more: ${{ steps.run-pipeline.outputs.has_more }}
@@ -218,7 +218,7 @@ jobs:
     needs: process_timeline
     if: >-
       ${{ always() && github.event.inputs.dry_run != 'true' && (
-        github.event.inputs.merge_only == 'dry-run' || github.event.inputs.merge_only == 'apply' ||
+        github.event.inputs.merge_only == 'scores' || github.event.inputs.merge_only == 'dry-run' || github.event.inputs.merge_only == 'apply' ||
         (needs.process_timeline.result == 'success' && needs.process_timeline.outputs.has_more == 'false')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 130
@@ -276,6 +276,7 @@ jobs:
           ARGS="--deadline-ts $(( $(date +%s) + 105*60 ))"
           [ -n "$WATCH" ] && ARGS="$ARGS --watch $WATCH"
           [ "$MODE" = "dry-run" ] && ARGS="$ARGS --dry-run"
+          [ "$MODE" = "scores" ] && ARGS="$ARGS --dry-run --no-llm"
           set -o pipefail
           python timeline_merge.py $ARGS 2>&1 | tee merge.log
 
