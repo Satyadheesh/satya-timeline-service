@@ -1,12 +1,13 @@
 name: Satya Timeline Pipeline
 
 on:
-  # Forward loop cadence: daily at 13:30 UTC = 19:00 IST. Each run processes
-  # everything new since the checkpoint — chaining 95-min chunks via
-  # self-redispatch until caught up — then rests until the next evening.
-  # (~90 eligible articles/day ≈ 2-3 chunks per run.)
+  # Forward loop cadence: every 8 hours, at 10:30, 18:30 and 02:30 UTC (16:00, 00:00 and 08:00 IST).
+  # Goal: timelines refreshed about twice a day. GitHub often starts scheduled runs hours late, so an
+  # 8-hour schedule lands roughly 10-14 hours apart in practice. Each run processes everything new since
+  # the checkpoint, chaining chunks via self-redispatch until caught up; the concurrency group below
+  # queues a run that is due while another is still going (never two at once).
   schedule:
-    - cron: '30 10 * * *'
+    - cron: '30 2,10,18 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
