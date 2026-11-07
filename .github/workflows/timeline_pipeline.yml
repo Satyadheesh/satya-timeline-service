@@ -31,7 +31,7 @@ on:
         required: false
         default: ''
       cleanup_args:
-        description: 'Clean-up only: extra options, e.g. --regroup --dup-days 45 --drift-days 30 --max-drift 120'
+        description: 'Clean-up only: extra options, e.g. --regroup --dup-days 45 --drift-days 30 --undo-moves 14584,15099'
         required: false
         default: ''
 
@@ -291,7 +291,7 @@ jobs:
           [ -n "$WATCH" ] && ARGS="$ARGS --watch $WATCH"
           if [ -n "$EXTRA" ]; then
             # options and numbers only
-            [[ "$EXTRA" =~ ^[-a-z0-9\ ]+$ ]] || { echo "::error::cleanup_args may only hold options and numbers"; exit 1; }
+            [[ "$EXTRA" =~ ^[-a-z0-9,\ ]+$ ]] || { echo "::error::cleanup_args may only hold options and numbers"; exit 1; }
             ARGS="$ARGS $EXTRA"
           fi
           [ "$MODE" = "dry-run" ] && ARGS="$ARGS --dry-run"
