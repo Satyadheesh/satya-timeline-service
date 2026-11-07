@@ -30,6 +30,10 @@ on:
         description: 'Clean-up only: comma-separated event ids whose pair scores are always printed'
         required: false
         default: ''
+      cleanup_args:
+        description: 'Clean-up only: extra options, e.g. --regroup --dup-days 45 --drift-days 30 --max-drift 120'
+        required: false
+        default: ''
 
 concurrency:
   group: satya-pipeline-main
@@ -281,9 +285,15 @@ jobs:
           MODEL_PATH: "./models/gemma-4-12b-it-Q4_K_M.gguf"
           WATCH: ${{ github.event.inputs.watch }}
           MODE: ${{ github.event.inputs.merge_only }}
+          EXTRA: ${{ github.event.inputs.cleanup_args }}
         run: |
           ARGS="--deadline-ts $(( $(date +%s) + 105*60 ))"
           [ -n "$WATCH" ] && ARGS="$ARGS --watch $WATCH"
+          if [ -n "$EXTRA" ]; then
+            # options and numbers only
+            [[ "$EXTRA" =~ ^[-a-z0-9\ ]+$ ]] || { echo "::error::cleanup_args may only hold options and numbers"; exit 1; }
+            ARGS="$ARGS $EXTRA"
+          fi
           [ "$MODE" = "dry-run" ] && ARGS="$ARGS --dry-run"
           [ "$MODE" = "scores" ] && ARGS="$ARGS --dry-run --no-llm"
           set -o pipefail
